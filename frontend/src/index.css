@@ -1,0 +1,263 @@
+.card {
+  transition: all 0.3s ease-in-out;
+  border-radius: 10px;
+}
+
+.card:hover {
+  box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.btn {
+  transition: all 0.3s ease-in-out;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+}
+
+a {
+  text-decoration: none;
+  font-weight: 500;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+
+/* Apply custom scrollbar globally */
+::-webkit-scrollbar {
+  width: 6px;
+  /* Adjust scrollbar width */
+}
+
+/* Track (background of the scrollbar) */
+::-webkit-scrollbar-track {
+  background: #f0f0f0;
+  /* Light grey background */
+  border-radius: 10px;
+}
+
+/* Handle (the moving part of the scrollbar) */
+::-webkit-scrollbar-thumb {
+  background: #007bff;
+  /* Blue scrollbar */
+  border-radius: 10px;
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+  background: #0056b3;
+  /* Darker blue on hover */
+}
+
+/* Optional: Horizontal scrollbar */
+::-webkit-scrollbar-horizontal {
+  height: 6px;
+}
+
+/* Track for horizontal scrollbar */
+::-webkit-scrollbar-track-piece {
+  background: #f0f0f0;
+}
+
+/* Custom scrollbar for dark mode (optional) */
+@media (prefers-color-scheme: dark) {
+  ::-webkit-scrollbar-track {
+    background: #2c2c2c;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #3399ff;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #1a73e8;
+  }
+}
+
+.navbar {
+  box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.1);
+  font-size: 1.1rem;
+}
+
+.navbar-brand {
+  font-weight: bold;
+  font-size: 1.5rem;
+}
+
+.nav-link:hover,
+.btn:hover {
+  opacity: 0.9;
+}
+
+.sidebar-item {
+  transition: all 0.3s ease-in-out;
+}
+
+.sidebar-item:hover {
+  background: #f8f9fa;
+  border-left: 3px solid #007bff;
+  padding-left: 10px;
+}
+
+body.dark-theme {
+  background-color: #121212;
+  color: #ffffff;
+}
+
+.dark-theme .navbar {
+  background-color: #333;
+  color: #ffffff;
+}
+
+.dark-theme .btn-outline-dark {
+  border-color: #ffffff;
+  color: #ffffff;
+}
+
+.dark-theme .btn-outline-primary {
+  border-color: #ffffff;
+  color: #ffffff;
+}
+
+.dark-theme a {
+  color: #ffffff;
+}
+
+.dark-theme .card {
+  background-color: #1e1e1e;
+  color: #ffffff;
+}
+
+.dark-theme input {
+  background-color: #2c2c2c;
+  color: #ffffff;
+  border-color: #555;
+}
+
+.dark-theme input::placeholder {
+  color: #bbb;
+}
+
+/* Global Dark Mode Styling */
+body.dark-theme {
+  background-color: #121212;
+  color: #ffffff;
+}
+
+/* Navbar Dark Mode */
+.dark-theme .navbar {
+  background-color: #2c2c2c !important;
+  color: #ffffff !important;
+}
+
+.dark-theme .btn-outline-dark {
+  border-color: #ffffff;
+  color: #ffffff;
+}
+
+.dark-theme .btn-outline-primary {
+  border-color: #ffffff;
+  color: #ffffff;
+}
+
+.dark-theme a {
+  color: #ffffff;
+}
+
+.dark-theme input {
+  background-color: #2c2c2c;
+  color: #ffffff;
+  border-color: #555;
+}
+
+.dark-theme input::placeholder {
+  color: #bbb;
+}
+
+.dark-theme .card {
+  background-color: #1e1e1e;
+  color: #ffffff;
+}
+
+.dark-theme .btn-dark {
+  background-color: #343a40;
+  color: #ffffff;
+}
+/* Dark mode styles for the footer */
+.dark-theme footer {
+  background-color: #1e1e1e !important;
+  color: #ffffff !important;
+  border-top: 1px solid #444 !important;
+}
+
+/* Footer links in dark mode */
+.dark-theme footer a {
+  color: #ffffff !important;
+}
+
+.dark-theme footer a:hover {
+  color: #3399ff !important;
+  text-decoration: underline;
+}
+
+/* Footer social media icons in dark mode */
+.dark-theme footer .fab {
+  color: #ffffff !important;
+  transition: color 0.3s ease-in-out;
+}
+
+.dark-theme footer .fab:hover {
+  color: #3399ff !important;
+}
+
+/* Footer horizontal line in dark mode */
+.dark-theme footer hr {
+  border-color: #555 !important;
+}
+
+/* Footer text muted style in dark mode */
+.dark-theme footer .text-muted {
+  color: #bbb !important;
+}
+
+/* Dark mode for create post page */
+.dark-theme .card {
+  background-color: #1e1e1e !important;
+  color: #ffffff !important;
+  border: 1px solid #333 !important;
+}
+
+.dark-theme .form-control, 
+.dark-theme .form-select {
+  background-color: #333 !important;
+  color: #ffffff !important;
+  border: 1px solid #555 !important;
+}
+
+.dark-theme .form-control::placeholder {
+  color: #bbb !important;
+}
+
+.dark-theme label {
+  font-weight: bold;
+  color: #ffffff !important;
+}
+
+.dark-theme .btn-primary {
+  background-color: #007bff !important;
+  border: none;
+  transition: all 0.3s ease-in-out;
+}
+
+.dark-theme .btn-primary:hover {
+  background-color: #0056b3 !important;
+}
+
+/* File input styling */
+.dark-theme input[type="file"] {
+  background-color: #222 !important;
+  color: #bbb !important;
+  border: 1px solid #444 !important;
+}
