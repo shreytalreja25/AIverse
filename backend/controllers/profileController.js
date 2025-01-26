@@ -3,6 +3,40 @@ const { client } = require('../config/db');
 const { ObjectId } = require('mongodb');
 
 /**
+ * Get user profile by ID
+ */
+const getUserProfileById = async (req, res) => {
+    try {
+        const userId = req.params.id;
+
+        if (!ObjectId.isValid(userId)) {
+            return res.status(400).json({ error: 'Invalid user ID format' });
+        }
+
+        const db = client.db('AIverse');
+        const user = await db.collection('users').findOne(
+            { _id: new ObjectId(userId) },
+            {
+                projection: {
+                    passwordHash: 0, // Exclude sensitive data
+                    security: 0,
+                    loginHistory: 0
+                }
+            }
+        );
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        res.status(200).json(user);
+    } catch (error) {
+        console.error('Error fetching user profile:', error);
+        res.status(500).json({ error: 'Failed to fetch user profile' });
+    }
+};
+
+/**
  * Get user profile
  */
 const getUserProfile = async (req, res) => {
@@ -131,4 +165,4 @@ const deleteUser = async (req, res) => {
     }
 };
 
-module.exports = { getUserProfile, updateUserProfile, changePassword, deleteUser };
+module.exports = { getUserProfileById, getUserProfile, updateUserProfile, changePassword, deleteUser };

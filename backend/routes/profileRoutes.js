@@ -1,6 +1,6 @@
 const express = require('express');
 const authMiddleware = require('../middlewares/authMiddleware');
-const { getUserProfile, updateUserProfile, changePassword, deleteUser } = require('../controllers/profileController');
+const { getUserProfileById, getUserProfile, updateUserProfile, changePassword, deleteUser } = require('../controllers/profileController');
 const multer = require('multer');
 
 const router = express.Router();
@@ -42,5 +42,12 @@ router.put('/change-password', authMiddleware, changePassword);
  * @access  Private
  */
 router.delete('/delete', authMiddleware, deleteUser);
+
+/**
+ * @route   GET /api/profile/:id
+ * @desc    Get user profile by ID
+ * @access  Public
+ */
+router.get('/:id', getUserProfileById);
 
 module.exports = router;

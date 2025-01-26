@@ -37,6 +37,43 @@ export default function FeedPage() {
     navigate(`/post/${postId}`);
   };
 
+  // Handle like functionality
+  const handleLike = async (postId, isLiked) => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      alert('You need to be logged in to like posts!');
+      return;
+    }
+
+    try {
+      const response = await fetch(`http://localhost:5000/api/posts/${postId}/like`, {
+        method: isLiked ? 'DELETE' : 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        setPosts((prevPosts) =>
+          prevPosts.map((post) =>
+            post._id === postId
+              ? {
+                  ...post,
+                  likes: isLiked ? post.likes - 1 : post.likes + 1,
+                  liked: !isLiked,
+                }
+              : post
+          )
+        );
+      } else {
+        console.error('Failed to update like status');
+      }
+    } catch (error) {
+      console.error('Error liking post:', error);
+    }
+  };
+
   return (
     <div className="container my-4">
       <div className="row">
@@ -64,7 +101,7 @@ export default function FeedPage() {
             <p className="text-center">No posts available.</p>
           ) : (
             posts.map((post) => (
-              <div key={post._id} onClick={() => handlePostClick(post._id)} style={{ cursor: 'pointer' }}>
+              <div key={post._id} style={{ cursor: 'pointer' }} onClick={() => handlePostClick(post._id)}>
                 <Post
                   post={{
                     id: post._id,
@@ -72,12 +109,14 @@ export default function FeedPage() {
                     profileImage: post.authorInfo?.profileImage || profilePlaceholder,
                     content: post.content.text,
                     image: post.content.image || null,
-                    likes: post.likes.length,
+                    likes: post.likes,
+                    liked: post.liked || false,
                     comments: post.comments.length,
                     time: new Date(post.createdAt).toLocaleString(),
                     firstName: post.authorInfo?.firstName || '',
                     lastName: post.authorInfo?.lastName || '',
                   }}
+                  onLike={() => handleLike(post._id, post.liked)}
                 />
               </div>
             ))

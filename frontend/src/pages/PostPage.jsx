@@ -25,22 +25,24 @@ export default function PostPage() {
         setPost(data);
         setLikes(data.likes.length);
         setComments(data.comments);
-      } catch (error) {
-        setError(error.message);
+
+        fetchMorePosts(data.authorInfo._id);
+      } catch (err) {
+        setError(err.message);
       } finally {
         setLoading(false);
       }
     };
 
-    const fetchMorePosts = async () => {
+    const fetchMorePosts = async (userId) => {
       try {
-        const response = await fetch(`http://localhost:5000/api/posts/user/${data.authorInfo._id}`);
+        const response = await fetch(`http://localhost:5000/api/posts/user/${userId}`);
         if (response.ok) {
           const data = await response.json();
           setMorePosts(data);
         }
-      } catch (error) {
-        console.error('Error fetching more posts:', error);
+      } catch (err) {
+        console.error('Error fetching more posts:', err);
       }
     };
 
@@ -51,25 +53,69 @@ export default function PostPage() {
           const data = await response.json();
           setSimilarPosts(data);
         }
-      } catch (error) {
-        console.error('Error fetching similar posts:', error);
+      } catch (err) {
+        console.error('Error fetching similar posts:', err);
       }
     };
 
     fetchPost();
-    fetchMorePosts();
     fetchSimilarPosts();
   }, [id]);
 
-  const handleLike = () => {
-    setLikes(liked ? likes - 1 : likes + 1);
-    setLiked(!liked);
+  const handleLike = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      alert('You need to be logged in to like posts!');
+      return;
+    }
+
+    try {
+      const response = await fetch(`http://localhost:5000/api/posts/${id}/like`, {
+        method: liked ? 'DELETE' : 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        setLiked(!liked);
+        setLikes((prevLikes) => (liked ? prevLikes - 1 : prevLikes + 1));
+      } else {
+        alert('Failed to update like.');
+      }
+    } catch (error) {
+      console.error('Error updating like:', error);
+    }
   };
 
-  const handleAddComment = () => {
+  const handleAddComment = async () => {
     if (newComment.trim()) {
-      setComments([...comments, { user: 'You', text: newComment }]);
-      setNewComment('');
+      const token = localStorage.getItem('token');
+      if (!token) {
+        alert('You need to be logged in to comment!');
+        return;
+      }
+
+      try {
+        const response = await fetch(`http://localhost:5000/api/posts/${id}/comment`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ text: newComment }),
+        });
+
+        if (response.ok) {
+          setComments([...comments, { user: 'You', text: newComment }]);
+          setNewComment('');
+        } else {
+          alert('Failed to add comment');
+        }
+      } catch (error) {
+        console.error('Error adding comment:', error);
+      }
     }
   };
 
@@ -113,7 +159,7 @@ export default function PostPage() {
                 className={`btn ${liked ? 'btn-primary' : 'btn-outline-primary'}`}
                 onClick={handleLike}
               >
-                <i className={`fas ${liked ? 'fa-thumbs-up' : 'fa-thumbs-up'}`}></i> {likes} Likes
+                <i className="fas fa-thumbs-up"></i> {likes} Likes
               </button>
               <button className="btn btn-outline-secondary">
                 <i className="fas fa-comment"></i> {comments.length} Comments
@@ -127,11 +173,15 @@ export default function PostPage() {
             <div className="mt-4">
               <h5>Comments</h5>
               <div className="list-group">
-                {comments.map((comment, index) => (
-                  <div key={index} className="list-group-item border-0">
-                    <strong>{comment.user}:</strong> {comment.text}
-                  </div>
-                ))}
+                {comments.length > 0 ? (
+                  comments.map((comment, index) => (
+                    <div key={index} className="list-group-item border-0">
+                      <strong>{comment.user}:</strong> {comment.text}
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-muted">No comments yet.</p>
+                )}
               </div>
 
               <div className="input-group mt-3">
@@ -158,17 +208,13 @@ export default function PostPage() {
               More from {post?.authorInfo?.firstName}
             </h5>
             <ul className="list-unstyled">
-              {morePosts.length > 0 ? (
-                morePosts.map((p) => (
-                  <li key={p._id} className="mb-2">
-                    <a href={`/post/${p._id}`} className="text-decoration-none text-dark">
-                      {p.content.text}
-                    </a>
-                  </li>
-                ))
-              ) : (
-                <p>No other posts found.</p>
-              )}
+              {morePosts.map((p) => (
+                <li key={p._id} className="mb-2">
+                  <a href={`/post/${p._id}`} className="text-decoration-none text-dark">
+                    {p.content.text}
+                  </a>
+                </li>
+              ))}
             </ul>
           </div>
 
@@ -176,17 +222,13 @@ export default function PostPage() {
           <div className="card shadow-sm border-0 p-4">
             <h5 className="fw-bold text-primary mb-3">Similar Posts</h5>
             <ul className="list-unstyled">
-              {similarPosts.length > 0 ? (
-                similarPosts.map((p) => (
-                  <li key={p._id} className="mb-2">
-                    <a href={`/post/${p._id}`} className="text-decoration-none text-dark">
-                      {p.content.text}
-                    </a>
-                  </li>
-                ))
-              ) : (
-                <p>No similar posts found.</p>
-              )}
+              {similarPosts.map((p) => (
+                <li key={p._id} className="mb-2">
+                  <a href={`/post/${p._id}`} className="text-decoration-none text-dark">
+                    {p.content.text}
+                  </a>
+                </li>
+              ))}
             </ul>
           </div>
         </div>

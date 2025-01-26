@@ -1,115 +1,84 @@
 import { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 import profilePlaceholder from '../assets/user-profile.png';
 
 export default function ProfilePage() {
-  const placeholderPosts = [
-    {
-      image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSvkUFmp5jSF-DhrD5102bzHU7RbidetfqYfA&s',
-      content: 'AI is revolutionizing the future of technology!',
-    },
-    {
-      image: 'https://timescale.ghost.io/blog/content/images/2024/07/A-Brief-History-of-AI_cover.jpg',
-      content: 'A deep dive into the history of Artificial Intelligence!',
-    },
-    {
-      image: 'https://cdn.britannica.com/47/246247-050-F1021DE9/AI-text-to-image-photo-robot-with-computer.jpg',
-      content: 'The future of AI-powered automation is here.',
-    },
-  ];
-
-  const [user, setUser] = useState({
-    username: 'shreytalreja',
-    email: 'user@example.com',
-    firstName: 'Shrey',
-    lastName: 'Talreja',
-    profileImage: profilePlaceholder,
-    followers: 245,
-    following: 180,
-    posts: placeholderPosts,
-    bio: 'Passionate about AI and technology!',
-    socialLinks: {
-      facebook: '',
-      twitter: '',
-      instagram: '',
-      linkedin: '',
-    },
-  });
-
-  const [isEditing, setIsEditing] = useState(false);
+  const { id } = useParams();
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [isFollowing, setIsFollowing] = useState(false);
 
   useEffect(() => {
-    // Load user data from localStorage if available
-    const storedUser = JSON.parse(localStorage.getItem('user'));
+    // Fetch user profile
+    const fetchUserProfile = async () => {
+      try {
+        const response = await fetch(`http://localhost:5000/api/profile/${id}`);
+        if (!response.ok) {
+          throw new Error('Failed to fetch user profile');
+        }
+        const data = await response.json();
 
-    if (storedUser) {
-      setUser({
-        ...storedUser,
-        profileImage: storedUser.profileImage || profilePlaceholder,
-        followers: storedUser.followers?.length || 0,
-        following: storedUser.following?.length || 0,
-        posts: storedUser.posts?.length ? storedUser.posts : placeholderPosts,
-        socialLinks: storedUser.socialLinks || {
-          facebook: '',
-          twitter: '',
-          instagram: '',
-          linkedin: '',
-        },
-      });
+        setUser({
+          ...data,
+          profileImage: data.profileImage || profilePlaceholder,
+        });
+
+        // Check if the logged-in user is following this profile
+        const loggedInUser = JSON.parse(localStorage.getItem('user'));
+        if (loggedInUser) {
+          setIsFollowing(data.followers.some(follower => follower.userId === loggedInUser._id));
+        }
+      } catch (error) {
+        console.error('Error fetching profile:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserProfile();
+  }, [id]);
+
+  // Handle follow/unfollow action
+  const handleFollowToggle = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      alert('Please log in to follow users.');
+      return;
     }
-  }, []);
 
-  const handleChange = (e) => {
-    setUser({
-      ...user,
-      [e.target.name]: e.target.value,
-    });
-  };
-
-  const handleSocialChange = (e) => {
-    setUser({
-      ...user,
-      socialLinks: { ...user.socialLinks, [e.target.name]: e.target.value },
-    });
-  };
-
-  const handleUpdate = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/profile/update', {
-        method: 'PUT',
+      const response = await fetch(`http://localhost:5000/api/users/${id}/${isFollowing ? 'unfollow' : 'follow'}`, {
+        method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-        body: JSON.stringify(user),
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
       });
 
-      const result = await response.json();
       if (response.ok) {
-        localStorage.setItem('user', JSON.stringify(user));
-        setIsEditing(false);
-        alert('Profile updated successfully');
+        setIsFollowing(!isFollowing);
+        setUser(prevState => ({
+          ...prevState,
+          followers: isFollowing
+            ? prevState.followers.filter(f => f.userId !== id)
+            : [...prevState.followers, { userId: id, followedAt: new Date() }]
+        }));
       } else {
-        alert(result.message);
+        const data = await response.json();
+        alert(data.message || 'Failed to update follow status');
       }
     } catch (error) {
-      alert('Failed to update profile');
+      console.error('Error following/unfollowing user:', error);
+      alert('An error occurred. Please try again later.');
     }
   };
 
-  const handleProfileImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setUser({
-        ...user,
-        profileImage: URL.createObjectURL(file),
-      });
-    }
-  };
+  if (loading) return <p className="text-center">Loading profile...</p>;
+  if (!user) return <p className="text-center text-danger">User not found.</p>;
 
   return (
     <div className="container my-5">
       <div className="card p-4 shadow-lg border-0 bg-dark text-light">
-        {/* Profile Header Section */}
         <div className="row align-items-center">
           <div className="col-md-4 text-center">
             <img
@@ -119,106 +88,52 @@ export default function ProfilePage() {
               width="150"
               height="150"
             />
-            {isEditing && (
-              <input
-                type="file"
-                className="form-control mt-3"
-                accept="image/*"
-                onChange={handleProfileImageChange}
-              />
-            )}
           </div>
           <div className="col-md-8 text-center text-md-start">
             <h2 className="fw-bold text-primary">{user.username}</h2>
             <p className="text-light">{user.bio || 'No bio available'}</p>
             <div className="d-flex justify-content-center justify-content-md-start">
               <div className="me-4 text-center">
-                <h5 className="fw-bold text-primary">{user.posts.length}</h5>
+                <h5 className="fw-bold text-primary">{user.posts?.length || 0}</h5>
                 <p className="text-light">Posts</p>
               </div>
               <div className="me-4 text-center">
-                <h5 className="fw-bold text-primary">{user.followers}</h5>
+                <h5 className="fw-bold text-primary">{user.followers?.length || 0}</h5>
                 <p className="text-light">Followers</p>
               </div>
               <div className="text-center">
-                <h5 className="fw-bold text-primary">{user.following}</h5>
+                <h5 className="fw-bold text-primary">{user.following?.length || 0}</h5>
                 <p className="text-light">Following</p>
               </div>
             </div>
-            {!isEditing && (
-              <button className="btn btn-primary mt-3" onClick={() => setIsEditing(true)}>
-                Edit Profile
-              </button>
-            )}
+            <button
+              className={`btn ${isFollowing ? 'btn-danger' : 'btn-primary'} mt-3`}
+              onClick={handleFollowToggle}
+            >
+              {isFollowing ? 'Unfollow' : 'Follow'}
+            </button>
           </div>
         </div>
+      </div>
 
-        {/* Editable Form Section */}
-        {isEditing && (
-          <div className="mt-4">
-            <h4 className="fw-bold text-primary">Edit Profile</h4>
-            <div className="row">
-              <div className="col-md-6 mb-3">
-                <label className="form-label">First Name</label>
-                <input
-                  type="text"
-                  name="firstName"
-                  className="form-control"
-                  value={user.firstName}
-                  onChange={handleChange}
-                />
-              </div>
-              <div className="col-md-6 mb-3">
-                <label className="form-label">Last Name</label>
-                <input
-                  type="text"
-                  name="lastName"
-                  className="form-control"
-                  value={user.lastName}
-                  onChange={handleChange}
-                />
-              </div>
-              <div className="col-12 mb-3">
-                <label className="form-label">Bio</label>
-                <textarea
-                  name="bio"
-                  className="form-control"
-                  value={user.bio}
-                  onChange={handleChange}
-                ></textarea>
-              </div>
-            </div>
-
-            <div className="text-center">
-              <button className="btn btn-success me-3" onClick={handleUpdate}>
-                Save Changes
-              </button>
-              <button className="btn btn-secondary" onClick={() => setIsEditing(false)}>
-                Cancel
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* User's Posts Section */}
-        <div className="mt-5">
-          <h4 className="fw-bold text-primary mb-4">User Posts</h4>
-          <div className="row row-cols-1 row-cols-md-3 g-4">
-            {user.posts.length > 0 ? (
-              user.posts.map((post, index) => (
-                <div className="col" key={index}>
-                  <div className="card shadow-sm bg-secondary text-light border-0 h-100">
-                    <img src={post.image} className="card-img-top rounded" alt="Post" />
-                    <div className="card-body">
-                      <p>{post.content}</p>
-                    </div>
+      {/* User Posts Section */}
+      <div className="mt-5">
+        <h4 className="fw-bold text-primary mb-4">User Posts</h4>
+        <div className="row row-cols-1 row-cols-md-3 g-4">
+          {user.posts?.length > 0 ? (
+            user.posts.map((post, index) => (
+              <div className="col" key={index}>
+                <div className="card shadow-sm bg-secondary text-light border-0 h-100">
+                  <img src={post.image} className="card-img-top rounded" alt="Post" />
+                  <div className="card-body">
+                    <p>{post.content}</p>
                   </div>
                 </div>
-              ))
-            ) : (
-              <p className="text-light text-center">No posts yet</p>
-            )}
-          </div>
+              </div>
+            ))
+          ) : (
+            <p className="text-light text-center">No posts yet</p>
+          )}
         </div>
       </div>
     </div>

@@ -1,36 +1,59 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import profilePlaceholder from '../assets/user-profile.png';
 
 export default function Post({ post }) {
-  const [likes, setLikes] = useState(post.likes || 0);
-  const [liked, setLiked] = useState(false);
+  const [likes, setLikes] = useState(post.likes.length || 0);
+  const [liked, setLiked] = useState(post.liked || false);
   const [comments, setComments] = useState(post.comments || []);
   const [showComments, setShowComments] = useState(false);
   const [newComment, setNewComment] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  // Handle like toggle
+  useEffect(() => {
+    // Check if the current user has already liked the post
+    const currentUser = localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user'))._id : null;
+    if (currentUser && post.likes.some(like => like.user === currentUser)) {
+      setLiked(true);
+    }
+  }, [post.likes]);
+
+  // Handle like/unlike toggle
   const handleLike = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      alert('You need to be logged in to like posts!');
+      return;
+    }
+
     setLiked(!liked);
     setLikes((prevLikes) => (liked ? prevLikes - 1 : prevLikes + 1));
 
     try {
-      await fetch(`http://localhost:5000/api/posts/${post.id}/like`, {
+      const response = await fetch(`http://localhost:5000/api/posts/${post.id}/like`, {
         method: liked ? 'DELETE' : 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
+          Authorization: `Bearer ${token}`,
         },
       });
+
+      if (!response.ok) {
+        throw new Error('Failed to update like');
+      }
     } catch (error) {
       console.error('Error updating like:', error);
       alert('Failed to update like. Please try again.');
+      setLiked(!liked);
+      setLikes((prevLikes) => (liked ? prevLikes + 1 : prevLikes - 1));
     }
   };
 
   // Handle adding a comment
   const handleAddComment = async () => {
     if (newComment.trim() === '') return;
+
+    setLoading(true);
 
     try {
       const response = await fetch(`http://localhost:5000/api/posts/${post.id}/comment`, {
@@ -43,13 +66,16 @@ export default function Post({ post }) {
       });
 
       if (response.ok) {
-        setComments([...comments, { text: newComment, user: 'You' }]);
+        const newCommentData = await response.json();
+        setComments([...comments, newCommentData]);
         setNewComment('');
       } else {
         alert('Failed to add comment');
       }
     } catch (error) {
       console.error('Error adding comment:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -82,7 +108,10 @@ export default function Post({ post }) {
         {post.image && <img src={post.image} className="img-fluid rounded mb-3" alt="Post" />}
 
         <div className="d-flex justify-content-between align-items-center">
-          <button className={`btn ${liked ? 'btn-primary' : 'btn-outline-primary'} btn-sm`} onClick={handleLike}>
+          <button
+            className={`btn ${liked ? 'btn-primary' : 'btn-outline-primary'} btn-sm`}
+            onClick={handleLike}
+          >
             <i className={`fas ${liked ? 'fa-thumbs-up' : 'fa-thumbs-up'}`}></i> {likes} Likes
           </button>
           <button className="btn btn-outline-secondary btn-sm" onClick={() => setShowComments(!showComments)}>
@@ -113,9 +142,10 @@ export default function Post({ post }) {
                 placeholder="Add a comment..."
                 value={newComment}
                 onChange={(e) => setNewComment(e.target.value)}
+                disabled={loading}
               />
-              <button className="btn btn-primary" onClick={handleAddComment}>
-                <i className="fas fa-paper-plane"></i>
+              <button className="btn btn-primary" onClick={handleAddComment} disabled={loading}>
+                {loading ? <i className="fas fa-spinner fa-spin"></i> : <i className="fas fa-paper-plane"></i>}
               </button>
             </div>
           </div>

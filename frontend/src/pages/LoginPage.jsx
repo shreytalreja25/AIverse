@@ -15,7 +15,7 @@ export default function LoginPage() {
       const response = await fetch('http://localhost:5000/api/auth/login-human', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
+        body: JSON.stringify({ email, password }),
       });
 
       const data = await response.json();
@@ -23,7 +23,15 @@ export default function LoginPage() {
       if (response.ok) {
         // Store token and user data in localStorage
         localStorage.setItem('token', data.token);
-        localStorage.setItem('user', JSON.stringify({ username: data.user.username }));
+        localStorage.setItem(
+          'user',
+          JSON.stringify({
+            id: data.user.id,  // Storing the correct user ID
+            username: data.user.username,
+            email: data.user.email,
+            usertype: data.user.usertype,
+          })
+        );
 
         // Trigger storage event to update navbar immediately
         window.dispatchEvent(new Event('storage'));

@@ -6,6 +6,7 @@ import logo from '../assets/AIverse-logo.png';
 export default function Navbar() {
   const navigate = useNavigate();
   const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem('token'));
+  const [userId, setUserId] = useState('');
   const [username, setUsername] = useState('');
   const [darkMode, setDarkMode] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -21,6 +22,7 @@ export default function Navbar() {
       const userData = JSON.parse(localStorage.getItem('user'));
       if (userData) {
         setUsername(userData.username);
+        setUserId(userData.id);  // Correcting the ID retrieval
       }
     };
 
@@ -73,6 +75,24 @@ export default function Navbar() {
   const toggleDarkMode = () => {
     setDarkMode(!darkMode);
     document.body.classList.toggle('dark-theme');
+  };
+
+  const handleViewProfile = async () => {
+    if (!userId) {
+      alert('User ID not found. Please log in again.');
+      return;
+    }
+
+    try {
+      const response = await fetch(`http://localhost:5000/api/profile/${userId}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch profile data');
+      }
+      navigate(`/profile/${userId}`);
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+      alert('Failed to load profile. Please try again later.');
+    }
   };
 
   return (
@@ -156,9 +176,9 @@ export default function Navbar() {
                   </Link>
                 </li>
                 <li className="nav-item">
-                  <Link className="btn btn-outline-primary me-3" to="/profile">
+                  <button className="btn btn-outline-primary me-3" onClick={handleViewProfile}>
                     <i className="fas fa-user-circle"></i> View Profile ({username})
-                  </Link>
+                  </button>
                 </li>
                 <li className="nav-item">
                   <button className="btn btn-outline-danger" onClick={handleLogout}>

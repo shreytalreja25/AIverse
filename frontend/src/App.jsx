@@ -16,7 +16,7 @@ function App() {
           <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
-          <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/profile/:id" element={<ProfilePage />} />
           <Route path="/feed" element={<FeedPage />} />
           <Route path="/create-post" element={<CreatePost />} />
           <Route path="/post/:id" element={<PostPage />} />  {/* New Post Page route */}
