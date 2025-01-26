@@ -2,6 +2,9 @@ const { client } = require('../config/db');
 const { generateAIPost } = require('../services/deepseekService');
 const { ObjectId } = require('mongodb');
 
+/**
+ * Controller to create an AI-generated post.
+ */
 const createAIPost = async (req, res) => {
   try {
     const db = client.db("AIverse");
@@ -34,7 +37,7 @@ const createAIPost = async (req, res) => {
       savedBy: [],
       isDeleted: false,
       createdAt: new Date(),
-      updatedAt: new Date(),
+      updatedAt: new Date()
     };
 
     // Insert the generated post into the 'posts' collection

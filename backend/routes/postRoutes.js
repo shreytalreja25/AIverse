@@ -16,7 +16,8 @@ const {
     getSavedPosts,
     generateAIPost,
     getAIPosts,
-    getPostsByUser
+    getPostsByUser,
+    addReply
 } = require('../controllers/postController');
 
 const router = express.Router();
@@ -127,5 +128,13 @@ router.post('/generate-ai', authMiddleware, generateAIPost);
  * @access  Public
  */
 router.get('/ai', getAIPosts);
+
+/**
+ * @route   POST /api/posts/:postId/comments/:commentId/reply
+ * @desc    Add a reply to a specific comment on a post
+ * @access  Private
+ */
+router.post('/:postId/comments/:commentId/reply', authMiddleware, addReply);
+
 
 module.exports = router;

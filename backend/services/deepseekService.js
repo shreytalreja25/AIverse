@@ -1,6 +1,35 @@
 const axios = require('axios');
 
 /**
+ * Safely cleans and extracts JSON from a string.
+ * - Removes <think> blocks.
+ * - Removes ```json or ``` markers.
+ * - Removes newline characters.
+ * - Extracts only the text from the first '{' to the matching last '}'.
+ *
+ * @param {string} rawResponse - The raw text response from the model.
+ * @returns {string} A valid JSON string (or best attempt).
+ */
+function cleanAndExtractJSON(rawResponse) {
+  // Remove <think>...</think>
+  let cleaned = rawResponse.replace(/<think>[\s\S]*?<\/think>/g, '').trim();
+  // Remove code block markers
+  cleaned = cleaned.replace(/```json|```/g, '').trim();
+  // Remove newlines
+  cleaned = cleaned.replace(/\r?\n|\r/g, '').trim();
+
+  // Now extract only the portion from the first '{' to the final '}'
+  const firstBracketIndex = cleaned.indexOf('{');
+  const lastBracketIndex = cleaned.lastIndexOf('}');
+
+  if (firstBracketIndex !== -1 && lastBracketIndex !== -1 && lastBracketIndex > firstBracketIndex) {
+    cleaned = cleaned.slice(firstBracketIndex, lastBracketIndex + 1);
+  }
+
+  return cleaned;
+}
+
+/**
  * Generate an AI user profile using DeepSeek model via Ollama.
  * @param {Array<string>} existingNames - List of already used first names.
  * @returns {Promise<Object>} AI-generated user profile.
@@ -37,15 +66,8 @@ const generateAIUserUsingDeepseek = async (existingNames) => {
       stream: false
     });
 
-    let aiUserResponse = response.data.response.trim();
+    let aiUserResponse = cleanAndExtractJSON(response.data.response);
 
-    // Remove <think>...</think> block if present
-    aiUserResponse = aiUserResponse.replace(/<think>[\s\S]*?<\/think>/g, '').trim();
-
-    // Cleanup any accidental code block markers
-    aiUserResponse = aiUserResponse.replace(/```json|```/g, '').trim();
-
-    // Parse the cleaned JSON response
     const aiUser = JSON.parse(aiUserResponse);
 
     // Assign the profile image using DiceBear API
@@ -57,7 +79,6 @@ const generateAIUserUsingDeepseek = async (existingNames) => {
     throw new Error("Failed to generate AI user");
   }
 };
-
 
 /**
  * Generate an AI social media post based on AI user's profile.
@@ -87,18 +108,9 @@ const generateAIPost = async (aiUser) => {
       stream: false
     });
 
-    let postResponse = response.data.response.trim();
+    let postResponse = cleanAndExtractJSON(response.data.response);
 
-    // Remove <think>...</think> block if present
-    postResponse = postResponse.replace(/<think>[\s\S]*?<\/think>/g, '').trim();
-
-    // Cleanup accidental code block markers and newlines
-    postResponse = postResponse.replace(/```json|```/g, '').trim();
-    postResponse = postResponse.replace(/\n/g, '').trim();
-
-    // Ensure response contains only JSON
     const aiPost = JSON.parse(postResponse);
-
     return aiPost;
   } catch (error) {
     console.error("Error generating AI post:", error.message);
@@ -133,18 +145,9 @@ const generateAIComment = async (post, aiUser) => {
       stream: false
     });
 
-    let commentResponse = response.data.response.trim();
+    let commentResponse = cleanAndExtractJSON(response.data.response);
 
-    // Remove <think>...</think> block if present
-    commentResponse = commentResponse.replace(/<think>[\s\S]*?<\/think>/g, '').trim();
-
-    // Cleanup accidental code block markers and newlines
-    commentResponse = commentResponse.replace(/```json|```/g, '').trim();
-    commentResponse = commentResponse.replace(/\n/g, '').trim();
-
-    // Ensure response contains only JSON
     const aiComment = JSON.parse(commentResponse);
-
     return aiComment;
   } catch (error) {
     console.error("Error generating AI comment:", error.message);
@@ -179,18 +182,9 @@ const generateAIReply = async (comment, aiUser) => {
       stream: false
     });
 
-    let replyResponse = response.data.response.trim();
+    let replyResponse = cleanAndExtractJSON(response.data.response);
 
-    // Remove <think>...</think> block if present
-    replyResponse = replyResponse.replace(/<think>[\s\S]*?<\/think>/g, '').trim();
-
-    // Cleanup accidental code block markers and newlines
-    replyResponse = replyResponse.replace(/```json|```/g, '').trim();
-    replyResponse = replyResponse.replace(/\n/g, '').trim();
-
-    // Ensure response contains only JSON
     const aiReply = JSON.parse(replyResponse);
-
     return aiReply;
   } catch (error) {
     console.error("Error generating AI reply:", error.message);
@@ -198,4 +192,9 @@ const generateAIReply = async (comment, aiUser) => {
   }
 };
 
-module.exports = { generateAIPost, generateAIUserUsingDeepseek,generateAIComment,generateAIReply };
+module.exports = {
+  generateAIPost,
+  generateAIUserUsingDeepseek,
+  generateAIComment,
+  generateAIReply
+};

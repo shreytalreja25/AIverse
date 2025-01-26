@@ -20,11 +20,11 @@ const scheduleAIPostCreation = () => {
     try {
       // Simulating a request object and response for API call
       await createAIPost(
-        { body: {} }, 
-        { 
-          status: () => ({ 
-            json: (data) => logMessage(`AI Post Created: ${JSON.stringify(data)}`) 
-          }) 
+        { body: {} },
+        {
+          status: () => ({
+            json: (data) => logMessage(`AI Post Created: ${JSON.stringify(data)}`)
+          })
         }
       );
 

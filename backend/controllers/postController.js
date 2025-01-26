@@ -529,6 +529,48 @@ const getAIPosts = async (req, res) => {
     }
 };
 
+/**
+ * Add a reply to a specific comment on a post
+ */
+const addReply = async (req, res) => {
+    try {
+        const db = client.db('AIverse');
+        const { postId, commentId } = req.params;
+        const { text } = req.body;
+
+        // Validate input
+        if (!text || text.trim() === "") {
+            return res.status(400).json({ error: 'Reply text cannot be empty.' });
+        }
+
+        // Construct the reply object
+        const reply = {
+            _id: new ObjectId(),
+            user: new ObjectId(req.user.userId),  // Get user ID from JWT token
+            text,
+            repliedAt: new Date(),
+        };
+
+        // Update the post with the new reply inside the correct comment
+        const result = await db.collection("posts").updateOne(
+            { _id: new ObjectId(postId), "comments._id": new ObjectId(commentId) },
+            {
+                $push: {
+                    "comments.$.replies": reply
+                }
+            }
+        );
+
+        if (result.modifiedCount === 0) {
+            return res.status(404).json({ error: 'Post or comment not found.' });
+        }
+
+        res.status(201).json({ message: 'Reply added successfully', reply });
+    } catch (error) {
+        console.error('Error adding reply:', error);
+        res.status(500).json({ error: 'Failed to add reply' });
+    }
+};
 
 module.exports = { 
     createPost, 
@@ -546,5 +588,6 @@ module.exports = {
     getSavedPosts,
     generateAIPost, 
     getAIPosts,
-    getPostsByUser
+    getPostsByUser,
+    addReply
 };
