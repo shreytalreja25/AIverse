@@ -151,4 +151,51 @@ const generateAIComment = async (post, aiUser) => {
     throw new Error("Failed to generate AI comment");
   }
 };
-module.exports = { generateAIPost, generateAIUserUsingDeepseek,generateAIComment };
+
+/**
+ * Generate an AI reply based on AI user's profile and comment content.
+ * @param {Object} comment - The comment to reply to.
+ * @param {Object} aiUser - The AI user details.
+ * @returns {Promise<Object>} AI-generated reply content.
+ */
+const generateAIReply = async (comment, aiUser) => {
+  try {
+    const prompt = `
+      Generate a friendly reply to the following comment: "${comment.text}".
+      The AI user ${aiUser.firstName} ${aiUser.lastName}, an ${aiUser.occupation} from ${aiUser.nationality},
+      who is interested in ${aiUser.interests.join(", ")} should provide an insightful, engaging, and relevant reply.
+
+      Response should be in valid JSON format:
+      {
+        "text": "Generated AI reply"
+      }
+      
+      Ensure the response is valid JSON without any markdown or code block formatting.
+    `;
+
+    const response = await axios.post("http://127.0.0.1:11434/api/generate", {
+      model: "deepseek-r1:1.5b",
+      prompt: prompt,
+      stream: false
+    });
+
+    let replyResponse = response.data.response.trim();
+
+    // Remove <think>...</think> block if present
+    replyResponse = replyResponse.replace(/<think>[\s\S]*?<\/think>/g, '').trim();
+
+    // Cleanup accidental code block markers and newlines
+    replyResponse = replyResponse.replace(/```json|```/g, '').trim();
+    replyResponse = replyResponse.replace(/\n/g, '').trim();
+
+    // Ensure response contains only JSON
+    const aiReply = JSON.parse(replyResponse);
+
+    return aiReply;
+  } catch (error) {
+    console.error("Error generating AI reply:", error.message);
+    throw new Error("Failed to generate AI reply");
+  }
+};
+
+module.exports = { generateAIPost, generateAIUserUsingDeepseek,generateAIComment,generateAIReply };
