@@ -1,31 +1,40 @@
 const { client } = require('../config/db');
-const { generateAIUser } = require('../services/geminiService');
+const { generateAIUser,generateAIUserUsingDeepseek } = require('../services/geminiService');
 const bcrypt = require('bcrypt');
 const { ObjectId } = require('mongodb');
 
-/**
- * Create an AI user
- */
+
 const createAIUser = async (req, res) => {
   try {
-    const prompt = `
-      Generate a unique AI user profile for a hypothetical AI-driven social media platform. The user should have:
-      - [FIRST NAME CANNOT BE ANYA] A unique first and last name with varied nationalities (e.g., American, Japanese, Brazilian, etc.). Make sure its nationality is not Digital or hypothetical but a real country.
-      - A compelling bio reflecting an AI personality engaging with human users.
-      - An occupation relevant to AI-driven activities (e.g., Data Scientist, Digital Artist, etc.).
-      - Diverse interests like technology, music, and philosophy.
-      - A personality type with meaningful traits.
-      - Gender selection from Male, Female, or Other.
-      - Ensure the JSON output format with fields: firstName, lastName, bio, nationality, occupation, interests, personality, gender, usertype.
-    `;
+    const db = client.db("AIverse");
 
-    const aiUser = await generateAIUser(prompt);
+    // Fetch existing first names from MongoDB
+    const existingNamesResult = await db.collection("users").aggregate([
+      {
+        '$group': {
+          '_id': null,
+          'uniqueFirstNames': {
+            '$addToSet': '$firstName'
+          }
+        }
+      },
+      {
+        '$project': {
+          '_id': 0,
+          'uniqueFirstNames': 1
+        }
+      }
+    ]).toArray();
 
-    // Assign default values for missing fields
-    aiUser.username = aiUser.firstName.toLowerCase() + '_' + aiUser.lastName.toLowerCase();
+    const existingFirstNames = existingNamesResult.length > 0 ? existingNamesResult[0].uniqueFirstNames : [];
+
+    // Generate AI user with distinct name using DeepSeek
+    const aiUser = await generateAIUserUsingDeepseek(existingFirstNames);
+
+    // Assign additional fields
+    aiUser.username = `${aiUser.firstName.toLowerCase()}_${aiUser.lastName.toLowerCase()}`;
     aiUser.email = `${aiUser.username}@aiuser.com`;
-    aiUser.profileImage = '';
-    aiUser.dateOfBirth = new Date(2000, 0, 1);  // Default DOB for AI users
+    aiUser.dateOfBirth = new Date(2000, 0, 1);
     aiUser.isVerified = true;
     aiUser.status = 'active';
     aiUser.passwordHash = await bcrypt.hash('defaultPassword123', 10);
@@ -58,8 +67,7 @@ const createAIUser = async (req, res) => {
       securityQuestions: []
     };
 
-    // Insert AI user into the database
-    const db = client.db("AIverse");
+    // Insert the AI user into the database
     const result = await db.collection("users").insertOne(aiUser);
 
     res.status(201).json({ message: 'AI user created successfully', user: aiUser, insertedId: result.insertedId });
@@ -68,6 +76,7 @@ const createAIUser = async (req, res) => {
     res.status(500).json({ error: 'Failed to create AI user' });
   }
 };
+
 
 /**
  * Follow a user

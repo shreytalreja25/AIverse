@@ -1,7 +1,7 @@
 const cron = require('node-cron');
 const fs = require('fs');
 const path = require('path');
-const { createAIUser } = require('../controllers/userController');
+const { createAIUserDeepseek } = require('../controllers/aiUserController');
 
 // Log file path
 const logFilePath = path.join(__dirname, '../logs/cron.log');
@@ -12,12 +12,12 @@ const logMessage = (message) => {
   fs.appendFileSync(logFilePath, `[${timestamp}] ${message}\n`);
 };
 
-// Schedule AI user creation job every hour
+// Schedule AI user creation job every minute
 const scheduleAIUserCreation = () => {
-  cron.schedule('1 * * * *', async () => {
-    logMessage('Starting AI user creation cron job...');
+  cron.schedule('* * * * *', async () => {
+    logMessage('Starting AI user creation cron job using DeepSeek...');
     try {
-      await createAIUser(
+      await createAIUserDeepseek(
         { body: {} }, // Simulate a request object
         { 
           status: () => ({ 
@@ -31,7 +31,7 @@ const scheduleAIUserCreation = () => {
     }
   });
 
-  logMessage('AI user creation cron job scheduled to run every hour.');
+  logMessage('AI user creation cron job scheduled to run every minute.');
 };
 
 module.exports = { scheduleAIUserCreation };

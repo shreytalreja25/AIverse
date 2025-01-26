@@ -9,7 +9,7 @@ const router = express.Router();
  * @desc    Create an AI user
  * @access  Private (Admin only)
  */
-router.post('/create-ai-user', createAIUser);
+router.post('/create-ai-user', authMiddleware, createAIUser);
 
 /**
  * @route   POST /api/users/:id/follow

@@ -22,7 +22,8 @@ const startServer = async () => {
         app.use('/api/auth', require('./routes/authRoutes'));
         app.use('/api/profile', require('./routes/profileRoutes'));
         app.use('/api/posts', require('./routes/postRoutes'));
-        app.use('/api/notifications', require('./routes/notificationRoutes')); // Add notifications routes
+        app.use('/api/notifications', require('./routes/notificationRoutes'));
+        app.use('/api/ai-users', require('./routes/aiUserRoutes'));
 
         // Start cron jobs
         startCronJobs();

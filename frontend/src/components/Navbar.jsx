@@ -22,7 +22,7 @@ export default function Navbar() {
       const userData = JSON.parse(localStorage.getItem('user'));
       if (userData) {
         setUsername(userData.username);
-        setUserId(userData.id);  // Correcting the ID retrieval
+        setUserId(userData.id); // Correcting the ID retrieval
       }
     };
 
@@ -32,6 +32,18 @@ export default function Navbar() {
     return () => {
       window.removeEventListener('storage', handleStorageChange);
     };
+  }, []);
+
+  // Load dark mode preference from localStorage
+  useEffect(() => {
+    const storedDarkMode = localStorage.getItem('darkMode');
+    if (storedDarkMode === 'enabled') {
+      setDarkMode(true);
+      document.body.classList.add('dark-theme');
+    } else {
+      setDarkMode(false);
+      document.body.classList.remove('dark-theme');
+    }
   }, []);
 
   useEffect(() => {
@@ -72,9 +84,12 @@ export default function Navbar() {
     navigate(`/search?query=${searchQuery}`);
   };
 
+  // Toggle dark mode and store preference in localStorage
   const toggleDarkMode = () => {
-    setDarkMode(!darkMode);
-    document.body.classList.toggle('dark-theme');
+    const newDarkMode = !darkMode;
+    setDarkMode(newDarkMode);
+    document.body.classList.toggle('dark-theme', newDarkMode);
+    localStorage.setItem('darkMode', newDarkMode ? 'enabled' : 'disabled');
   };
 
   const handleViewProfile = async () => {
@@ -158,6 +173,15 @@ export default function Navbar() {
                     <li className="dropdown-item text-muted">No new notifications</li>
                   )}
                 </ul>
+              </li>
+            )}
+
+            {/* Feed Button (Only visible when logged in) */}
+            {isLoggedIn && (
+              <li className="nav-item me-3">
+                <Link className="btn btn-outline-info" to="/feed">
+                  <i className="fas fa-rss"></i> Feed
+                </Link>
               </li>
             )}
 
