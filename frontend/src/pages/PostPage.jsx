@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import profilePlaceholder from '../assets/user-profile.png';
 
 export default function PostPage() {
@@ -15,9 +15,24 @@ export default function PostPage() {
   const [similarPosts, setSimilarPosts] = useState([]);
 
   useEffect(() => {
+    const token = localStorage.getItem('token');
+    const userData = JSON.parse(localStorage.getItem('user')) || {};
+    const userId = userData.id;
+
+    if (!userId) {
+      setError('User ID not found');
+      setLoading(false);
+      return;
+    }
+
     const fetchPost = async () => {
       try {
-        const response = await fetch(`http://localhost:5000/api/posts/${id}`);
+        const response = await fetch(`http://localhost:5000/api/posts/${id}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
         if (!response.ok) {
           throw new Error('Failed to fetch post');
         }
@@ -25,8 +40,9 @@ export default function PostPage() {
         setPost(data);
         setLikes(data.likes.length);
         setComments(data.comments);
+        setLiked(data.likes.some((like) => like.user === userId));
 
-        fetchMorePosts(data.authorInfo._id);
+        fetchMorePosts(userId);
       } catch (err) {
         setError(err.message);
       } finally {
@@ -36,7 +52,11 @@ export default function PostPage() {
 
     const fetchMorePosts = async (userId) => {
       try {
-        const response = await fetch(`http://localhost:5000/api/posts/user/${userId}`);
+        const response = await fetch(`http://localhost:5000/api/posts/user/${userId}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
         if (response.ok) {
           const data = await response.json();
           setMorePosts(data);
@@ -48,7 +68,11 @@ export default function PostPage() {
 
     const fetchSimilarPosts = async () => {
       try {
-        const response = await fetch(`http://localhost:5000/api/posts/similar/${id}`);
+        const response = await fetch(`http://localhost:5000/api/posts/similar/${id}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
         if (response.ok) {
           const data = await response.json();
           setSimilarPosts(data);
@@ -155,10 +179,7 @@ export default function PostPage() {
             )}
 
             <div className="d-flex justify-content-between">
-              <button
-                className={`btn ${liked ? 'btn-primary' : 'btn-outline-primary'}`}
-                onClick={handleLike}
-              >
+              <button className={`btn ${liked ? 'btn-primary' : 'btn-outline-primary'}`} onClick={handleLike}>
                 <i className="fas fa-thumbs-up"></i> {likes} Likes
               </button>
               <button className="btn btn-outline-secondary">
@@ -204,31 +225,32 @@ export default function PostPage() {
         <div className="col-lg-4">
           {/* More Posts by This User */}
           <div className="card shadow-sm border-0 p-4 mb-4">
-            <h5 className="fw-bold text-primary mb-3">
-              More from {post?.authorInfo?.firstName}
-            </h5>
+            <h5 className="fw-bold text-primary mb-3">More from {post?.authorInfo?.firstName}</h5>
             <ul className="list-unstyled">
               {morePosts.map((p) => (
                 <li key={p._id} className="mb-2">
-                  <a href={`/post/${p._id}`} className="text-decoration-none text-dark">
+                  <Link to={`/post/${p._id}`} className="text-decoration-none">
                     {p.content.text}
-                  </a>
+                  </Link>
                 </li>
               ))}
             </ul>
           </div>
-
-          {/* Similar Posts */}
+          {/* Similar Posts Section */}
           <div className="card shadow-sm border-0 p-4">
             <h5 className="fw-bold text-primary mb-3">Similar Posts</h5>
             <ul className="list-unstyled">
-              {similarPosts.map((p) => (
-                <li key={p._id} className="mb-2">
-                  <a href={`/post/${p._id}`} className="text-decoration-none text-dark">
-                    {p.content.text}
-                  </a>
-                </li>
-              ))}
+              {similarPosts.length > 0 ? (
+                similarPosts.map((p) => (
+                  <li key={p._id} className="mb-2">
+                    <Link to={`/post/${p._id}`} className="text-decoration-none text-dark">
+                      {p.content.text}
+                    </Link>
+                  </li>
+                ))
+              ) : (
+                <p>No similar posts available.</p>
+              )}
             </ul>
           </div>
         </div>
