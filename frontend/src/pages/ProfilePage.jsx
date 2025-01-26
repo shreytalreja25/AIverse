@@ -1,18 +1,26 @@
 import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import profilePlaceholder from '../assets/user-profile.png';
 
 export default function ProfilePage() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [user, setUser] = useState(null);
+  const [userPosts, setUserPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isFollowing, setIsFollowing] = useState(false);
 
   useEffect(() => {
-    // Fetch user profile
+    const token = localStorage.getItem('token');
+
+    // Fetch user profile with auth token
     const fetchUserProfile = async () => {
       try {
-        const response = await fetch(`http://localhost:5000/api/profile/${id}`);
+        const response = await fetch(`http://localhost:5000/api/profile/${id}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
         if (!response.ok) {
           throw new Error('Failed to fetch user profile');
         }
@@ -26,7 +34,7 @@ export default function ProfilePage() {
         // Check if the logged-in user is following this profile
         const loggedInUser = JSON.parse(localStorage.getItem('user'));
         if (loggedInUser) {
-          setIsFollowing(data.followers.some(follower => follower.userId === loggedInUser._id));
+          setIsFollowing(data.followers.some((follower) => follower.userId === loggedInUser.id));
         }
       } catch (error) {
         console.error('Error fetching profile:', error);
@@ -35,7 +43,26 @@ export default function ProfilePage() {
       }
     };
 
+    // Fetch user posts with auth token
+    const fetchUserPosts = async () => {
+      try {
+        const response = await fetch(`http://localhost:5000/api/posts/user/${id}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        if (!response.ok) {
+          throw new Error('Failed to fetch user posts');
+        }
+        const postsData = await response.json();
+        setUserPosts(postsData);
+      } catch (error) {
+        console.error('Error fetching user posts:', error);
+      }
+    };
+
     fetchUserProfile();
+    fetchUserPosts();
   }, [id]);
 
   // Handle follow/unfollow action
@@ -50,18 +77,18 @@ export default function ProfilePage() {
       const response = await fetch(`http://localhost:5000/api/users/${id}/${isFollowing ? 'unfollow' : 'follow'}`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
       });
 
       if (response.ok) {
         setIsFollowing(!isFollowing);
-        setUser(prevState => ({
+        setUser((prevState) => ({
           ...prevState,
           followers: isFollowing
-            ? prevState.followers.filter(f => f.userId !== id)
-            : [...prevState.followers, { userId: id, followedAt: new Date() }]
+            ? prevState.followers.filter((f) => f.userId !== id)
+            : [...prevState.followers, { userId: id, followedAt: new Date() }],
         }));
       } else {
         const data = await response.json();
@@ -94,7 +121,7 @@ export default function ProfilePage() {
             <p className="text-light">{user.bio || 'No bio available'}</p>
             <div className="d-flex justify-content-center justify-content-md-start">
               <div className="me-4 text-center">
-                <h5 className="fw-bold text-primary">{user.posts?.length || 0}</h5>
+                <h5 className="fw-bold text-primary">{userPosts.length}</h5>
                 <p className="text-light">Posts</p>
               </div>
               <div className="me-4 text-center">
@@ -120,13 +147,25 @@ export default function ProfilePage() {
       <div className="mt-5">
         <h4 className="fw-bold text-primary mb-4">User Posts</h4>
         <div className="row row-cols-1 row-cols-md-3 g-4">
-          {user.posts?.length > 0 ? (
-            user.posts.map((post, index) => (
-              <div className="col" key={index}>
+          {userPosts.length > 0 ? (
+            userPosts.map((post) => (
+              <div className="col" key={post._id} onClick={() => navigate(`/post/${post._id}`)} style={{ cursor: 'pointer' }}>
                 <div className="card shadow-sm bg-secondary text-light border-0 h-100">
-                  <img src={post.image} className="card-img-top rounded" alt="Post" />
+                  <img
+                    src={post.content.image || profilePlaceholder}
+                    className="card-img-top rounded"
+                    alt="Post"
+                  />
                   <div className="card-body">
-                    <p>{post.content}</p>
+                    <p>{post.content.text}</p>
+                    <div className="d-flex justify-content-between">
+                      <span>
+                        <i className="fas fa-thumbs-up"></i> {post.likes.length} Likes
+                      </span>
+                      <span>
+                        <i className="fas fa-comment"></i> {post.comments.length} Comments
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
