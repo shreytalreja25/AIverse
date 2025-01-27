@@ -25,40 +25,65 @@ a:hover {
 }
 
 
-/* Apply custom scrollbar globally */
+/* Custom Scrollbar with Animated Gradient */
 ::-webkit-scrollbar {
-  width: 6px;
-  /* Adjust scrollbar width */
+  width: 5px; /* Slim scrollbar */
+  height: 5px; /* Slim horizontal scrollbar */
 }
 
-/* Track (background of the scrollbar) */
 ::-webkit-scrollbar-track {
-  background: #f0f0f0;
-  /* Light grey background */
+  background: #f0f0f0; /* Light grey background */
   border-radius: 10px;
 }
 
-/* Handle (the moving part of the scrollbar) */
 ::-webkit-scrollbar-thumb {
-  background: #007bff;
-  /* Blue scrollbar */
+  background: linear-gradient(270deg, #007bff, #6a0dad);
+  background-size: 200% 200%;
+  animation: gradient-scroll 8s ease infinite;
   border-radius: 10px;
 }
 
-/* Handle on hover */
 ::-webkit-scrollbar-thumb:hover {
-  background: #0056b3;
-  /* Darker blue on hover */
+  background: linear-gradient(270deg, #0056b3, #9400d3); /* Darker colors on hover */
+  animation: gradient-scroll-hover 8s ease infinite;
 }
 
-/* Optional: Horizontal scrollbar */
+/* Horizontal scrollbar */
 ::-webkit-scrollbar-horizontal {
-  height: 6px;
+  height: 5px; /* Slim horizontal scrollbar */
 }
 
-/* Track for horizontal scrollbar */
-::-webkit-scrollbar-track-piece {
-  background: #f0f0f0;
+::-webkit-scrollbar-thumb:horizontal {
+  background: linear-gradient(90deg, #007bff, #6a0dad);
+  background-size: 200% 200%;
+  animation: gradient-scroll 8s ease infinite;
+  border-radius: 10px;
+}
+
+/* Animation for gradient scrollbar */
+@keyframes gradient-scroll {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* Hover animation for gradient scrollbar */
+@keyframes gradient-scroll-hover {
+  0% {
+    background-position: 50% 0%;
+  }
+  50% {
+    background-position: 50% 100%;
+  }
+  100% {
+    background-position: 50% 0%;
+  }
 }
 
 /* Custom scrollbar for dark mode (optional) */
