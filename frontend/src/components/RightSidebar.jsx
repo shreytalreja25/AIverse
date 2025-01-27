@@ -1,6 +1,64 @@
+import { useEffect, useState } from 'react';
 import profilePlaceholder from '../assets/user-profile.png';
 
 export default function RightSidebar() {
+  const [suggestedUsers, setSuggestedUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchSuggestedUsers = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch('http://localhost:5000/api/suggested-users', {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch suggested users');
+        }
+
+        const data = await response.json();
+        setSuggestedUsers(data.users);
+      } catch (error) {
+        console.error('Error fetching suggested users:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSuggestedUsers();
+  }, []);
+
+  const handleFollowToggle = async (userId, isFollowing) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`http://localhost:5000/api/follow`, {
+        method: isFollowing ? 'DELETE' : 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ userIdToFollow: userId }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update follow status');
+      }
+
+      setSuggestedUsers((prevUsers) =>
+        prevUsers.map((user) =>
+          user._id === userId ? { ...user, isFollowing: !isFollowing } : user
+        )
+      );
+    } catch (error) {
+      console.error('Error updating follow status:', error);
+    }
+  };
+
   return (
     <div className="col-lg-3 d-none d-lg-block">
       <div className="card p-4 shadow border-0 bg-light">
@@ -14,26 +72,35 @@ export default function RightSidebar() {
 
       <div className="card p-4 mt-4 shadow border-0 bg-light">
         <h5 className="fw-bold text-primary">🌟 Suggested Users</h5>
-        <ul className="list-unstyled">
-          <li>
-            <img
-              src={profilePlaceholder}
-              style={{ height: '20px' }}
-              alt="user"
-              className="rounded-circle me-2"
-            />
-            <a href="/user/johndoe" className="text-decoration-none">johndoe</a>
-          </li>
-          <li>
-            <img
-              src={profilePlaceholder}
-              style={{ height: '20px' }}
-              alt="user"
-              className="rounded-circle me-2"
-            />
-            <a href="/user/janedoe" className="text-decoration-none">janedoe</a>
-          </li>
-        </ul>
+        {loading ? (
+          <p>Loading suggested users...</p>
+        ) : suggestedUsers.length > 0 ? (
+          <ul className="list-unstyled">
+            {suggestedUsers.map((user) => (
+              <li key={user._id} className="d-flex align-items-center justify-content-between mb-2">
+                <div className="d-flex align-items-center">
+                  <img
+                    src={user.profileImage || profilePlaceholder}
+                    style={{ height: '40px', width: '40px' }}
+                    alt={user.username}
+                    className="rounded-circle me-2 border border-primary shadow-sm"
+                  />
+                  <a href={`/user/${user.username}`} className="text-decoration-none fw-bold">
+                    {user.firstName} {user.lastName || ''} (@{user.username})
+                  </a>
+                </div>
+                <button
+                  className={`btn btn-sm ${user.isFollowing ? 'btn-outline-danger' : 'btn-primary'}`}
+                  onClick={() => handleFollowToggle(user._id, user.isFollowing)}
+                >
+                  {user.isFollowing ? 'Unfollow' : 'Follow'}
+                </button>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p>No suggested users available.</p>
+        )}
       </div>
     </div>
   );

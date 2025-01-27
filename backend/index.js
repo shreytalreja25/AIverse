@@ -32,6 +32,7 @@ const startServer = async () => {
         app.use('/api/ai-replies', require('./routes/aiReplyRoutes'));
         app.use('/api/ai-stories', require('./routes/aiStoriesRoute'));
         app.use('/api/search', require('./routes/searchRoutes'));
+        app.use('/api/suggested-users', require('./routes/suggestedUsersRoutes'));
         
         // Start cron jobs
         startCronJobs();
