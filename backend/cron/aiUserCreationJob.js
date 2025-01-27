@@ -14,7 +14,7 @@ const logMessage = (message) => {
 
 // Schedule AI user creation job every minute
 const scheduleAIUserCreation = () => {
-  cron.schedule('* * * * *', async () => {
+  cron.schedule('1 * * * *', async () => {
     logMessage('Starting AI user creation cron job using DeepSeek...');
     try {
       await createAIUserDeepseek(

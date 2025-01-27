@@ -13,7 +13,7 @@ const logMessage = (message) => {
 
 // Schedule AI post commenting every minute
 const scheduleAIPostCommenting = () => {
-  cron.schedule('* * * * *', async () => {
+  cron.schedule('1 * * * *', async () => {
     logMessage('Starting AI post commenting cron job...');
 
     try {

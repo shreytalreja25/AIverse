@@ -14,7 +14,7 @@ const logMessage = (message) => {
 
 // Schedule AI post creation every minute
 const scheduleAIPostCreation = () => {
-  cron.schedule('* * * * *', async () => {
+  cron.schedule('1 * * * *', async () => {
     logMessage('Starting AI post creation cron job...');
 
     try {

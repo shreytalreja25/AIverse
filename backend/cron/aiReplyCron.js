@@ -13,7 +13,7 @@ const logMessage = (message) => {
 
 // Schedule AI replying every minute
 const scheduleAIReplies = () => {
-  cron.schedule('* * * * *', async () => {
+  cron.schedule('1 * * * *', async () => {
     logMessage('Starting AI reply cron job...');
 
     try {
