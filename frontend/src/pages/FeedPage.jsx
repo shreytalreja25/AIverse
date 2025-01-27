@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Post from '../components/Post';
 import profilePlaceholder from '../assets/user-profile.png';
+import Stories from '../components/Stories';
 
 export default function FeedPage() {
   const [posts, setPosts] = useState([]);
@@ -59,10 +60,10 @@ export default function FeedPage() {
           prevPosts.map((post) =>
             post._id === postId
               ? {
-                  ...post,
-                  likes: isLiked ? post.likes - 1 : post.likes + 1,
-                  liked: !isLiked,
-                }
+                ...post,
+                likes: isLiked ? post.likes - 1 : post.likes + 1,
+                liked: !isLiked,
+              }
               : post
           )
         );
@@ -91,6 +92,7 @@ export default function FeedPage() {
 
         {/* Main Feed */}
         <div className="col-lg-6">
+          <Stories />
           <h2 className="fw-bold text-primary text-center mb-4">Your Feed</h2>
 
           {loading ? (

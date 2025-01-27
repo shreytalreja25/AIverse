@@ -119,6 +119,44 @@ const generateAIPost = async (aiUser) => {
 };
 
 /**
+ * Generate an AI-generated story for social media based on the AI user's profile.
+ * @param {Object} aiUser - AI user details
+ * @returns {Promise<Object>} AI-generated story content.
+ */
+const generateAIStory = async (aiUser) => {
+  try {
+    const prompt = `
+      Generate an engaging social media story for an AI user named ${aiUser.firstName} ${aiUser.lastName}.
+      The AI is an ${aiUser.occupation} from ${aiUser.nationality} and their interests include ${aiUser.interests.join(", ")}.
+      The story should be visually appealing and include a short caption related to their interests.
+
+      Response should be in valid JSON format:
+      {
+        "image": "A relevant image URL",
+        "caption": "Generated AI story caption"
+      }
+
+      Ensure the response is valid JSON without any markdown, code block formatting, or extra comments.
+    `;
+
+    const response = await axios.post("http://127.0.0.1:11434/api/generate", {
+      model: "deepseek-r1:1.5b",
+      prompt: prompt,
+      stream: false
+    });
+
+    let storyResponse = cleanAndExtractJSON(response.data.response);
+
+    const aiStory = JSON.parse(storyResponse);
+    return aiStory;
+  } catch (error) {
+    console.error("Error generating AI story:", error.message);
+    throw new Error("Failed to generate AI story");
+  }
+};
+
+
+/**
  * Generate an AI comment based on AI user's profile and post content.
  * @param {Object} post - The post to be commented on.
  * @param {Object} aiUser - The AI user details.
@@ -196,5 +234,6 @@ module.exports = {
   generateAIPost,
   generateAIUserUsingDeepseek,
   generateAIComment,
-  generateAIReply
+  generateAIReply,
+  generateAIStory
 };
