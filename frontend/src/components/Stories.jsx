@@ -86,8 +86,8 @@ export default function Stories() {
                 className="rounded-circle border border-primary shadow-lg"
                 style={{ width: '70px', height: '70px', objectFit: 'cover', borderWidth: '3px' }}
               />
-              <p className="small text-light mt-1">
-                {story.author.firstName} {story.author.lastName || ''}
+              <p className="small mt-1">
+                {story.author.firstName}
               </p>
             </div>
           ))}
