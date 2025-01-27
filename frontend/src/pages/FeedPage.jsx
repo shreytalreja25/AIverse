@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Post from '../components/Post';
 import profilePlaceholder from '../assets/user-profile.png';
 import Stories from '../components/Stories';
+import RightSidebar from '../components/RightSidebar';
 
 export default function FeedPage() {
   const [posts, setPosts] = useState([]);
@@ -11,7 +12,6 @@ export default function FeedPage() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Fetch posts from the API
     const fetchPosts = async () => {
       try {
         const response = await fetch('http://localhost:5000/api/posts?page=1&limit=10');
@@ -33,12 +33,10 @@ export default function FeedPage() {
     fetchPosts();
   }, []);
 
-  // Function to navigate to the individual post page
   const handlePostClick = (postId) => {
     navigate(`/post/${postId}`);
   };
 
-  // Handle like functionality
   const handleLike = async (postId, isLiked) => {
     const token = localStorage.getItem('token');
     if (!token) {
@@ -60,10 +58,10 @@ export default function FeedPage() {
           prevPosts.map((post) =>
             post._id === postId
               ? {
-                ...post,
-                likes: isLiked ? post.likes - 1 : post.likes + 1,
-                liked: !isLiked,
-              }
+                  ...post,
+                  likes: isLiked ? post.likes - 1 : post.likes + 1,
+                  liked: !isLiked,
+                }
               : post
           )
         );
@@ -78,7 +76,6 @@ export default function FeedPage() {
   return (
     <div className="container my-4">
       <div className="row">
-        {/* Left Sidebar */}
         <div className="col-lg-3 d-none d-lg-block">
           <div className="card p-4 shadow border-0 bg-light">
             <h5 className="fw-bold text-primary">📂 Navigation</h5>
@@ -90,7 +87,6 @@ export default function FeedPage() {
           </div>
         </div>
 
-        {/* Main Feed */}
         <div className="col-lg-6">
           <Stories />
           <h2 className="fw-bold text-primary text-center mb-4">Your Feed</h2>
@@ -125,31 +121,7 @@ export default function FeedPage() {
           )}
         </div>
 
-        {/* Right Sidebar */}
-        <div className="col-lg-3 d-none d-lg-block">
-          <div className="card p-4 shadow border-0 bg-light">
-            <h5 className="fw-bold text-primary">🔥 Trending Topics</h5>
-            <ul className="list-unstyled">
-              <li>#ArtificialIntelligence</li>
-              <li>#MachineLearning</li>
-              <li>#TechTrends</li>
-            </ul>
-          </div>
-
-          <div className="card p-4 mt-4 shadow border-0 bg-light">
-            <h5 className="fw-bold text-primary">🌟 Suggested Users</h5>
-            <ul className="list-unstyled">
-              <li>
-                <img src={profilePlaceholder} style={{ height: '20px' }} alt="user" className="rounded-circle me-2" />
-                <a href="/user/johndoe" className="text-decoration-none">johndoe</a>
-              </li>
-              <li>
-                <img src={profilePlaceholder} style={{ height: '20px' }} alt="user" className="rounded-circle me-2" />
-                <a href="/user/janedoe" className="text-decoration-none">janedoe</a>
-              </li>
-            </ul>
-          </div>
-        </div>
+        <RightSidebar />
       </div>
     </div>
   );
