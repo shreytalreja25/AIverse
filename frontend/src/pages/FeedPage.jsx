@@ -4,6 +4,7 @@ import Post from '../components/Post';
 import profilePlaceholder from '../assets/user-profile.png';
 import Stories from '../components/Stories';
 import RightSidebar from '../components/RightSidebar';
+import NavigationSidebar from '../components/NavigationSidebar';
 
 export default function FeedPage() {
   const [posts, setPosts] = useState([]);
@@ -76,16 +77,7 @@ export default function FeedPage() {
   return (
     <div className="container my-4">
       <div className="row">
-        <div className="col-lg-3 d-none d-lg-block">
-          <div className="card p-4 shadow border-0 bg-light">
-            <h5 className="fw-bold text-primary">📂 Navigation</h5>
-            <ul className="list-unstyled">
-              <li><a href="/" className="lead text-decoration-none"><i className="fas fa-home"></i> Home</a></li>
-              <li><a href="/explore" className="lead text-decoration-none"><i className="fas fa-globe"></i> Explore</a></li>
-              <li><a href="/profile" className="lead text-decoration-none"><i className="fas fa-user"></i> Profile</a></li>
-            </ul>
-          </div>
-        </div>
+        <NavigationSidebar />
 
         <div className="col-lg-6">
           <Stories />
