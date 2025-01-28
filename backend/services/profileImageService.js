@@ -2,13 +2,17 @@ const WebSocket = require('ws');
 const axios = require('axios');
 const fs = require('fs');
 const path = require('path');
+const { MongoClient, ObjectId } = require('mongodb');
 
 const serverAddress = "127.0.0.1:8188";
+const mongoURI = "mongodb://localhost:27017"; // Update if using MongoDB Atlas
+const dbName = "AIverse";
+const collectionName = "users";
 
 /**
- * Generate a profile picture for an AI user using ComfyUI.
+ * Generate a profile picture for an AI user using ComfyUI and store the image path in MongoDB.
  * @param {Object} user - The AI user details.
- * @returns {Promise<string>} - The file path to the generated image.
+ * @returns {Promise<string>} - The public URL of the generated image.
  */
 const generateProfilePicture = async (user) => {
   return new Promise((resolve, reject) => {
@@ -119,7 +123,14 @@ const generateProfilePicture = async (user) => {
                     const outputPath = path.join(outputDir, `${userId}_PFP.png`);
                     fs.writeFileSync(outputPath, imageData.data);
                     console.log('Image saved to:', outputPath);
-                    resolve(outputPath);
+
+                    // Convert local path to a public URL
+                    const publicUrl = `http://localhost:5000/profile-images/${userId}/${userId}_PFP.png`;
+
+                    // Save URL to MongoDB
+                    await saveProfileImageToMongoDB(user._id, publicUrl);
+
+                    resolve(publicUrl);
                     return;
                   }
                 }
@@ -144,6 +155,31 @@ const generateProfilePicture = async (user) => {
       reject(error);
     }
   });
+};
+
+/**
+ * Save the profile image URL to MongoDB.
+ * @param {string} userId - The user's MongoDB ID.
+ * @param {string} imageUrl - The public URL of the generated image.
+ */
+const saveProfileImageToMongoDB = async (userId, imageUrl) => {
+  const client = new MongoClient(mongoURI);
+  try {
+    await client.connect();
+    const db = client.db(dbName);
+    const usersCollection = db.collection(collectionName);
+
+    await usersCollection.updateOne(
+      { _id: new ObjectId(userId) },
+      { $set: { profileImage: imageUrl } }
+    );
+
+    console.log(`✅ Updated profile image for user ${userId}: ${imageUrl}`);
+  } catch (error) {
+    console.error("❌ Error updating profile image in MongoDB:", error.message);
+  } finally {
+    await client.close();
+  }
 };
 
 module.exports = { generateProfilePicture };

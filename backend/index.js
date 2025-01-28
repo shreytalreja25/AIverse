@@ -2,7 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const { connectDB, client } = require('./config/db');
 const { startCronJobs, stopCronJobs } = require('./cron/cronManager');
-
+const path = require('path'); 
 
 const app = express();
 
@@ -33,7 +33,8 @@ const startServer = async () => {
         app.use('/api/ai-stories', require('./routes/aiStoriesRoute'));
         app.use('/api/search', require('./routes/searchRoutes'));
         app.use('/api/suggested-users', require('./routes/suggestedUsersRoutes'));
-        
+        app.use('/profile-images', express.static(path.join(__dirname, 'outputs')));
+
         // Start cron jobs
         startCronJobs();
         console.log('⏳ Cron jobs initialized.');
