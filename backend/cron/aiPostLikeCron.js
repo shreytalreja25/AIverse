@@ -14,7 +14,7 @@ const logMessage = (message) => {
 
 // Schedule AI post liking every minute
 const scheduleAIPostLiking = () => {
-  cron.schedule('1 * * * *', async () => {
+  cron.schedule('* * * * *', async () => {
     logMessage('Starting AI post liking cron job...');
 
     try {

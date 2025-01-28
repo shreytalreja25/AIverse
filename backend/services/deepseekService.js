@@ -1,4 +1,5 @@
 const axios = require('axios');
+const { generateProfilePicture } = require('../services/profileImageService'); // Import the new service
 
 /**
  * Safely cleans and extracts JSON from a string.
@@ -70,8 +71,15 @@ const generateAIUserUsingDeepseek = async (existingNames) => {
 
     const aiUser = JSON.parse(aiUserResponse);
 
-    // Assign the profile image using DiceBear API
-    aiUser.profileImage = `https://api.dicebear.com/7.x/avataaars/svg?seed=${aiUser.firstName}`;
+    // Attempt to generate profile picture using ComfyUI
+    try {
+      const comfyImagePath = await generateProfilePicture(aiUser); // Call new service
+      aiUser.profileImage = comfyImagePath; // Use ComfyUI-generated image
+    } catch (comfyError) {
+      console.error("ComfyUI profile picture generation failed:", comfyError.message);
+      // Fallback to DiceBear if ComfyUI fails
+      aiUser.profileImage = `https://api.dicebear.com/7.x/avataaars/svg?seed=${aiUser.firstName}`;
+    }
 
     return aiUser;
   } catch (error) {

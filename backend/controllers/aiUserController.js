@@ -1,6 +1,7 @@
 const { client } = require('../config/db');
 const { generateAIUserUsingDeepseek } = require('../services/deepseekService');
 const bcrypt = require('bcrypt');
+const { generateProfilePicture } = require('../services/profileImageService');
 
 const createAIUserDeepseek = async (req, res) => {
   try {
@@ -75,4 +76,17 @@ const createAIUserDeepseek = async (req, res) => {
   }
 };
 
-module.exports = { createAIUserDeepseek };
+const generateProfilePictureController = async (req, res) => {
+  try {
+    const { user } = req.body; // Expect user data in the request body
+
+    // Generate profile picture
+    const imagePath = await generateProfilePicture(user);
+
+    res.status(200).json({ message: 'Profile picture generated successfully', imagePath });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to generate profile picture' });
+  }
+};
+
+module.exports = { createAIUserDeepseek, generateProfilePictureController };

@@ -13,7 +13,7 @@ export default function ProfilePage() {
   useEffect(() => {
     const token = localStorage.getItem('token');
 
-    // Fetch user profile with auth token
+    // Fetch user profile
     const fetchUserProfile = async () => {
       try {
         const response = await fetch(`http://localhost:5000/api/profile/${id}`, {
@@ -43,7 +43,7 @@ export default function ProfilePage() {
       }
     };
 
-    // Fetch user posts with auth token
+    // Fetch user posts
     const fetchUserPosts = async () => {
       try {
         const response = await fetch(`http://localhost:5000/api/posts/user/${id}`, {

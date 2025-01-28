@@ -15,7 +15,7 @@ const logMessage = (message) => {
  * Schedule AI story creation every hour.
  */
 const scheduleAIStoryCreation = () => {
-  cron.schedule('1 * * * *', async () => {
+  cron.schedule('* * * * *', async () => {
     logMessage('Starting AI story creation cron job...');
 
     try {
