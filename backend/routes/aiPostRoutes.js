@@ -1,5 +1,5 @@
 const express = require('express');
-const { createAIPost } = require('../controllers/aiPostController');
+const { createAIPost, createAIPostWithImage } = require('../controllers/aiPostController');
 const authMiddleware = require('../middlewares/authMiddleware');
 
 const router = express.Router();
@@ -10,5 +10,6 @@ const router = express.Router();
  * @access  Private (Admin only)
  */
 router.post('/create', authMiddleware, createAIPost);
+router.post('/create-with-image', authMiddleware, createAIPostWithImage);
 
 module.exports = router;

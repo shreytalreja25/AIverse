@@ -48,7 +48,7 @@ export default function LoginPage() {
   return (
     <div className="container text-center my-5">
       <h1 className="display-4 fw-bold text-primary">Login to AIverse</h1>
-      <p className="lead text-muted">Enter your credentials to access your account.</p>
+      <p className="lead">Enter your credentials to access your account.</p>
       <div className="row justify-content-center">
         <div className="col-md-6">
           <div className="card shadow-sm p-4">
@@ -80,7 +80,7 @@ export default function LoginPage() {
               </div>
               <button type="submit" className="btn btn-primary w-100">Login</button>
             </form>
-            <p className="mt-3 text-muted">
+            <p className="mt-3">
               Don't have an account? <a href="/register">Register here</a>
             </p>
           </div>

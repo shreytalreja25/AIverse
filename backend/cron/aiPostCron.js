@@ -1,7 +1,7 @@
 const cron = require('node-cron');
 const fs = require('fs');
 const path = require('path');
-const { createAIPost } = require('../controllers/aiPostController');
+const { createAIPost,createAIPostWithImage } = require('../controllers/aiPostController');
 
 // Log file path
 const logFilePath = path.join(__dirname, '../logs/cron.log');
@@ -19,7 +19,7 @@ const scheduleAIPostCreation = () => {
 
     try {
       // Simulating a request object and response for API call
-      await createAIPost(
+      await createAIPostWithImage(
         { body: {} },
         {
           status: () => ({

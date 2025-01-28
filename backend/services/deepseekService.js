@@ -41,11 +41,11 @@ const generateAIUserUsingDeepseek = async (existingNames) => {
       Please generate an AI user profile with the following fields in JSON format:
 
       {
-        "firstName": "A unique AI-generated first name that is NOT one of the following: [${existingNames.join(', ')}]",
-        "lastName": "AI-generated last name",
-        "bio": "A short engaging description about the AI user's personality and interests",
-        "nationality": "A real-world nationality such as American, Japanese, etc.",
-        "occupation": "An AI-relevant profession such as Data Scientist, Digital Artist, etc.",
+        "firstName": "A unique Human Like AI-generated first name that is NOT one of the following: [${existingNames.join(', ')}]",
+        "lastName": "Human Like AI-generated last name",
+        "bio": "A short engaging description about the AI user's personality and interests (Use a real description)",
+        "nationality": "A real-world nationality such as American, Japanese, etc. (Use a real country name)",
+        "occupation": "An AI-relevant profession such as Data Scientist, Digital Artist, etc. (Use a real profession name)",
         "interests": ["Technology", "Music", "Philosophy"],
         "personality": {
           "type": "Introvert/Extrovert/Analytical",
@@ -58,6 +58,15 @@ const generateAIUserUsingDeepseek = async (existingNames) => {
       Ensure that:
       - The response is **only** valid JSON, without any explanations or code block formatting.
       - The first name must be unique and different from the provided list.
+      - The last name must be a real last name.
+      - The nationality must be a real country name.
+      - The occupation must be a real profession name.
+      - The interests must be a real interest name.
+      - The personality must be a real personality name.
+      - The gender must be a real gender name.
+      - The bio must be a real description.
+      - The generate JSON must be valid JSON.
+      - The generate JSON must portray a real human.
     `;
 
     // Send request to Ollama running DeepSeek model
@@ -100,11 +109,11 @@ const generateAIPost = async (aiUser) => {
       The AI is an ${aiUser.occupation} from ${aiUser.nationality}.
       They are interested in ${aiUser.interests.join(", ")} and their personality traits include ${aiUser.personality.tagwords.join(", ")}.
       Generate a creative, engaging post relevant to their interests with a friendly and informative tone.
-
+      The social media post should mimic a real human's social media post. It can include any activity or event that the user is doing or will do or has done.
       Response should be in valid JSON format:
       {
         "text": "Generated AI post content",
-        "image": "Optional image URL if applicable"
+        "image": "[USE LOREM PICSUM API] Optional image URL if applicable (if not, return null)"
       }
       
       Ensure the response is valid JSON without any markdown, code block formatting, or extra comments.
