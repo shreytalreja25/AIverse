@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
 import Modal from 'react-bootstrap/Modal';
+import { FaChevronLeft, FaChevronRight } from 'react-icons/fa'; // For navigation
 
 export default function Stories() {
   const [stories, setStories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [selectedStory, setSelectedStory] = useState(null);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [currentStoryIndex, setCurrentStoryIndex] = useState(0);
   const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
@@ -19,7 +21,19 @@ export default function Stories() {
           throw new Error(data.error || 'Failed to fetch stories');
         }
 
-        setStories(data);
+        // Group stories by author._id
+        const groupedStories = {};
+        data.forEach((story) => {
+          if (!groupedStories[story.author._id]) {
+            groupedStories[story.author._id] = {
+              author: story.author,
+              stories: [],
+            };
+          }
+          groupedStories[story.author._id].stories.push(story);
+        });
+
+        setStories(Object.values(groupedStories)); // Convert object to array
       } catch (error) {
         setError(error.message);
         console.error('Error fetching stories:', error);
@@ -31,29 +45,23 @@ export default function Stories() {
     fetchStories();
   }, []);
 
-  // Function to handle clicking on a story and mark it as viewed
-  const handleStoryClick = async (story) => {
-    setSelectedStory(story);
+  // Function to handle clicking on a story circle
+  const handleStoryClick = (user) => {
+    setSelectedUser(user);
+    setCurrentStoryIndex(0); // Start from first story
     setShowModal(true);
+  };
 
-    // Mark story as viewed via API
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        alert('Please log in to view stories.');
-        return;
-      }
+  // Navigate between multiple stories of a single user
+  const handleNextStory = () => {
+    if (selectedUser && currentStoryIndex < selectedUser.stories.length - 1) {
+      setCurrentStoryIndex(currentStoryIndex + 1);
+    }
+  };
 
-      await fetch('http://localhost:5000/api/ai-stories/view', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ storyId: story._id }),
-      });
-    } catch (error) {
-      console.error('Error marking story as viewed:', error);
+  const handlePrevStory = () => {
+    if (selectedUser && currentStoryIndex > 0) {
+      setCurrentStoryIndex(currentStoryIndex - 1);
     }
   };
 
@@ -68,11 +76,11 @@ export default function Stories() {
         <p className="text-center">No stories available.</p>
       ) : (
         <div className="d-flex justify-content-center gap-3 overflow-auto py-2" style={{ maxWidth: '100%' }}>
-          {stories.map((story) => (
+          {stories.map((user) => (
             <div
-              key={story._id}
+              key={user.author._id}
               className="text-center story-circle"
-              onClick={() => handleStoryClick(story)}
+              onClick={() => handleStoryClick(user)}
               style={{
                 cursor: 'pointer',
                 display: 'flex',
@@ -81,34 +89,52 @@ export default function Stories() {
               }}
             >
               <img
-                src={story.author.profileImage}
-                alt={story.author.firstName}
+                src={user.author.profileImage}
+                alt={user.author.firstName}
                 className="rounded-circle border border-primary shadow-lg"
                 style={{ width: '70px', height: '70px', objectFit: 'cover', borderWidth: '3px' }}
               />
-              <p className="small mt-1">
-                {story.author.firstName}
-              </p>
+              <p className="small mt-1">{user.author.firstName}</p>
             </div>
           ))}
         </div>
       )}
 
-      {/* Modal to show the selected story */}
+      {/* Modal to show stories */}
       <Modal show={showModal} onHide={() => setShowModal(false)} centered>
-        <Modal.Body className="text-center bg-dark text-light">
-          {selectedStory && (
+        <Modal.Body className="text-center bg-dark text-light position-relative">
+          {selectedUser && selectedUser.stories.length > 0 && (
             <>
               <img
-                src={selectedStory.content.image}
+                src={selectedUser.stories[currentStoryIndex].content.image}
                 alt="story"
                 className="img-fluid rounded"
                 style={{ maxHeight: '500px', width: '100%' }}
               />
-              <p className="mt-3">{selectedStory.content.caption}</p>
+              <p className="mt-3">{selectedUser.stories[currentStoryIndex].content.caption}</p>
               <small>
-                by {selectedStory.author.firstName} {selectedStory.author.lastName || ''} (@{selectedStory.author.username})
+                by {selectedUser.author.firstName} {selectedUser.author.lastName || ''} (@{selectedUser.author.username})
               </small>
+
+              {/* Navigation Arrows */}
+              {selectedUser.stories.length > 1 && (
+                <>
+                  {currentStoryIndex > 0 && (
+                    <FaChevronLeft
+                      onClick={handlePrevStory}
+                      className="position-absolute top-50 start-0 translate-middle-y text-white fs-2"
+                      style={{ cursor: 'pointer', left: '10px' }}
+                    />
+                  )}
+                  {currentStoryIndex < selectedUser.stories.length - 1 && (
+                    <FaChevronRight
+                      onClick={handleNextStory}
+                      className="position-absolute top-50 end-0 translate-middle-y text-white fs-2"
+                      style={{ cursor: 'pointer', right: '10px' }}
+                    />
+                  )}
+                </>
+              )}
             </>
           )}
         </Modal.Body>
