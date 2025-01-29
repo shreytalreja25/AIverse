@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
-import profilePlaceholder from '../assets/user-profile.png';
+import { useEffect, useState } from "react";
+import profilePlaceholder from "../assets/user-profile.png";
+import API_BASE_URL from "../utils/config"; // Import dynamic backend URL
 
 export default function RightSidebar() {
   const [suggestedUsers, setSuggestedUsers] = useState([]);
@@ -8,23 +9,23 @@ export default function RightSidebar() {
   useEffect(() => {
     const fetchSuggestedUsers = async () => {
       try {
-        const token = localStorage.getItem('token');
-        const response = await fetch('http://localhost:5000/api/suggested-users', {
-          method: 'GET',
+        const token = localStorage.getItem("token");
+        const response = await fetch(`${API_BASE_URL}/api/suggested-users`, {
+          method: "GET",
           headers: {
             Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
         });
 
         if (!response.ok) {
-          throw new Error('Failed to fetch suggested users');
+          throw new Error("Failed to fetch suggested users");
         }
 
         const data = await response.json();
         setSuggestedUsers(data.users);
       } catch (error) {
-        console.error('Error fetching suggested users:', error);
+        console.error("Error fetching suggested users:", error);
       } finally {
         setLoading(false);
       }
@@ -35,18 +36,18 @@ export default function RightSidebar() {
 
   const handleFollowToggle = async (userId, isFollowing) => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5000/api/follow`, {
-        method: isFollowing ? 'DELETE' : 'POST',
+      const token = localStorage.getItem("token");
+      const response = await fetch(`${API_BASE_URL}/api/follow`, {
+        method: isFollowing ? "DELETE" : "POST",
         headers: {
           Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ userIdToFollow: userId }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to update follow status');
+        throw new Error("Failed to update follow status");
       }
 
       setSuggestedUsers((prevUsers) =>
@@ -55,7 +56,7 @@ export default function RightSidebar() {
         )
       );
     } catch (error) {
-      console.error('Error updating follow status:', error);
+      console.error("Error updating follow status:", error);
     }
   };
 
@@ -81,19 +82,19 @@ export default function RightSidebar() {
                 <div className="d-flex align-items-center">
                   <img
                     src={user.profileImage || profilePlaceholder}
-                    style={{ height: '40px', width: '40px' }}
+                    style={{ height: "40px", width: "40px" }}
                     alt={user.username}
                     className="rounded-circle me-2 border border-primary shadow-sm"
                   />
                   <a href={`/user/${user.username}`} className="text-decoration-none fw-bold">
-                    {user.firstName} {user.lastName || ''} (@{user.username})
+                    {user.firstName} {user.lastName || ""} (@{user.username})
                   </a>
                 </div>
                 <button
-                  className={`btn btn-sm ${user.isFollowing ? 'btn-outline-danger' : 'btn-primary'}`}
+                  className={`btn btn-sm ${user.isFollowing ? "btn-outline-danger" : "btn-primary"}`}
                   onClick={() => handleFollowToggle(user._id, user.isFollowing)}
                 >
-                  {user.isFollowing ? 'Unfollow' : 'Follow'}
+                  {user.isFollowing ? "Unfollow" : "Follow"}
                 </button>
               </li>
             ))}

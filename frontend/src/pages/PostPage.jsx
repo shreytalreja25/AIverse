@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import profilePlaceholder from '../assets/user-profile.png';
+import API_BASE_URL from "../utils/config"; // Import dynamic backend URL
 
 export default function PostPage() {
   const { id } = useParams();
@@ -27,7 +28,7 @@ export default function PostPage() {
 
     const fetchPost = async () => {
       try {
-        const response = await fetch(`http://localhost:5000/api/posts/${id}`, {
+        const response = await fetch(`${API_BASE_URL}/api/posts/${id}`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -52,7 +53,7 @@ export default function PostPage() {
 
     const fetchMorePosts = async (userId) => {
       try {
-        const response = await fetch(`http://localhost:5000/api/posts/user/${userId}`, {
+        const response = await fetch(`${API_BASE_URL}/api/posts/user/${userId}`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -68,7 +69,7 @@ export default function PostPage() {
 
     const fetchSimilarPosts = async () => {
       try {
-        const response = await fetch(`http://localhost:5000/api/posts/similar/${id}`, {
+        const response = await fetch(`${API_BASE_URL}/api/posts/similar/${id}`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -94,7 +95,7 @@ export default function PostPage() {
     }
 
     try {
-      const response = await fetch(`http://localhost:5000/api/posts/${id}/like`, {
+      const response = await fetch(`${API_BASE_URL}/api/posts/${id}/like`, {
         method: liked ? 'DELETE' : 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -122,7 +123,7 @@ export default function PostPage() {
       }
 
       try {
-        const response = await fetch(`http://localhost:5000/api/posts/${id}/comment`, {
+        const response = await fetch(`${API_BASE_URL}/api/posts/${id}/comment`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

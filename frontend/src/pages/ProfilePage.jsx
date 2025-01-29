@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import profilePlaceholder from '../assets/user-profile.png';
+import { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import profilePlaceholder from "../assets/user-profile.png";
+import API_BASE_URL from "../utils/config"; // Import dynamic backend URL
 
 export default function ProfilePage() {
   const { id } = useParams();
@@ -11,18 +12,18 @@ export default function ProfilePage() {
   const [isFollowing, setIsFollowing] = useState(false);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem("token");
 
     // Fetch user profile
     const fetchUserProfile = async () => {
       try {
-        const response = await fetch(`http://localhost:5000/api/profile/${id}`, {
+        const response = await fetch(`${API_BASE_URL}/api/profile/${id}`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
         if (!response.ok) {
-          throw new Error('Failed to fetch user profile');
+          throw new Error("Failed to fetch user profile");
         }
         const data = await response.json();
 
@@ -32,12 +33,12 @@ export default function ProfilePage() {
         });
 
         // Check if the logged-in user is following this profile
-        const loggedInUser = JSON.parse(localStorage.getItem('user'));
+        const loggedInUser = JSON.parse(localStorage.getItem("user"));
         if (loggedInUser) {
           setIsFollowing(data.followers.some((follower) => follower.userId === loggedInUser.id));
         }
       } catch (error) {
-        console.error('Error fetching profile:', error);
+        console.error("Error fetching profile:", error);
       } finally {
         setLoading(false);
       }
@@ -46,18 +47,18 @@ export default function ProfilePage() {
     // Fetch user posts
     const fetchUserPosts = async () => {
       try {
-        const response = await fetch(`http://localhost:5000/api/posts/user/${id}`, {
+        const response = await fetch(`${API_BASE_URL}/api/posts/user/${id}`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
         if (!response.ok) {
-          throw new Error('Failed to fetch user posts');
+          throw new Error("Failed to fetch user posts");
         }
         const postsData = await response.json();
         setUserPosts(postsData);
       } catch (error) {
-        console.error('Error fetching user posts:', error);
+        console.error("Error fetching user posts:", error);
       }
     };
 
@@ -67,18 +68,18 @@ export default function ProfilePage() {
 
   // Handle follow/unfollow action
   const handleFollowToggle = async () => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem("token");
     if (!token) {
-      alert('Please log in to follow users.');
+      alert("Please log in to follow users.");
       return;
     }
 
     try {
-      const response = await fetch(`http://localhost:5000/api/users/${id}/${isFollowing ? 'unfollow' : 'follow'}`, {
-        method: 'POST',
+      const response = await fetch(`${API_BASE_URL}/api/users/${id}/${isFollowing ? "unfollow" : "follow"}`, {
+        method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
       });
 
@@ -92,11 +93,11 @@ export default function ProfilePage() {
         }));
       } else {
         const data = await response.json();
-        alert(data.message || 'Failed to update follow status');
+        alert(data.message || "Failed to update follow status");
       }
     } catch (error) {
-      console.error('Error following/unfollowing user:', error);
-      alert('An error occurred. Please try again later.');
+      console.error("Error following/unfollowing user:", error);
+      alert("An error occurred. Please try again later.");
     }
   };
 
@@ -118,7 +119,7 @@ export default function ProfilePage() {
           </div>
           <div className="col-md-8 text-center text-md-start">
             <h2 className="fw-bold text-primary">{user.username}</h2>
-            <p className="text-light">{user.bio || 'No bio available'}</p>
+            <p className="text-light">{user.bio || "No bio available"}</p>
             <div className="d-flex justify-content-center justify-content-md-start">
               <div className="me-4 text-center">
                 <h5 className="fw-bold text-primary">{userPosts.length}</h5>
@@ -134,10 +135,10 @@ export default function ProfilePage() {
               </div>
             </div>
             <button
-              className={`btn ${isFollowing ? 'btn-danger' : 'btn-primary'} mt-3`}
+              className={`btn ${isFollowing ? "btn-danger" : "btn-primary"} mt-3`}
               onClick={handleFollowToggle}
             >
-              {isFollowing ? 'Unfollow' : 'Follow'}
+              {isFollowing ? "Unfollow" : "Follow"}
             </button>
           </div>
         </div>
@@ -149,13 +150,9 @@ export default function ProfilePage() {
         <div className="row row-cols-1 row-cols-md-3 g-4">
           {userPosts.length > 0 ? (
             userPosts.map((post) => (
-              <div className="col" key={post._id} onClick={() => navigate(`/post/${post._id}`)} style={{ cursor: 'pointer' }}>
+              <div className="col" key={post._id} onClick={() => navigate(`/post/${post._id}`)} style={{ cursor: "pointer" }}>
                 <div className="card shadow-sm bg-secondary text-light border-0 h-100">
-                  <img
-                    src={post.content.image || profilePlaceholder}
-                    className="card-img-top rounded"
-                    alt="Post"
-                  />
+                  <img src={post.content.image || profilePlaceholder} className="card-img-top rounded" alt="Post" />
                   <div className="card-body">
                     <p>{post.content.text}</p>
                     <div className="d-flex justify-content-between">

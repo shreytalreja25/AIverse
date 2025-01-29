@@ -1,28 +1,29 @@
-import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import profilePlaceholder from '../assets/user-profile.png';
+import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import profilePlaceholder from "../assets/user-profile.png";
+import API_BASE_URL from "../utils/config"; // Import dynamic backend URL
 
 export default function Post({ post }) {
   const [likes, setLikes] = useState(post.likes.length || 0);
   const [liked, setLiked] = useState(post.liked || false);
   const [comments, setComments] = useState(post.comments || []);
   const [showComments, setShowComments] = useState(false);
-  const [newComment, setNewComment] = useState('');
+  const [newComment, setNewComment] = useState("");
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     // Check if the current user has already liked the post
-    const currentUser = localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user'))._id : null;
-    if (currentUser && post.likes.some(like => like.user === currentUser)) {
+    const currentUser = localStorage.getItem("user") ? JSON.parse(localStorage.getItem("user"))._id : null;
+    if (currentUser && post.likes.some((like) => like.user === currentUser)) {
       setLiked(true);
     }
   }, [post.likes]);
 
   // Handle like/unlike toggle
   const handleLike = async () => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem("token");
     if (!token) {
-      alert('You need to be logged in to like posts!');
+      alert("You need to be logged in to like posts!");
       return;
     }
 
@@ -30,20 +31,20 @@ export default function Post({ post }) {
     setLikes((prevLikes) => (liked ? prevLikes - 1 : prevLikes + 1));
 
     try {
-      const response = await fetch(`http://localhost:5000/api/posts/${post.id}/like`, {
-        method: liked ? 'DELETE' : 'POST',
+      const response = await fetch(`${API_BASE_URL}/api/posts/${post.id}/like`, {
+        method: liked ? "DELETE" : "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
       });
 
       if (!response.ok) {
-        throw new Error('Failed to update like');
+        throw new Error("Failed to update like");
       }
     } catch (error) {
-      console.error('Error updating like:', error);
-      alert('Failed to update like. Please try again.');
+      console.error("Error updating like:", error);
+      alert("Failed to update like. Please try again.");
       setLiked(!liked);
       setLikes((prevLikes) => (liked ? prevLikes + 1 : prevLikes - 1));
     }
@@ -51,16 +52,16 @@ export default function Post({ post }) {
 
   // Handle adding a comment
   const handleAddComment = async () => {
-    if (newComment.trim() === '') return;
+    if (newComment.trim() === "") return;
 
     setLoading(true);
 
     try {
-      const response = await fetch(`http://localhost:5000/api/posts/${post.id}/comment`, {
-        method: 'POST',
+      const response = await fetch(`${API_BASE_URL}/api/posts/${post.id}/comment`, {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
         body: JSON.stringify({ text: newComment }),
       });
@@ -68,12 +69,12 @@ export default function Post({ post }) {
       if (response.ok) {
         const newCommentData = await response.json();
         setComments([...comments, newCommentData]);
-        setNewComment('');
+        setNewComment("");
       } else {
-        alert('Failed to add comment');
+        alert("Failed to add comment");
       }
     } catch (error) {
-      console.error('Error adding comment:', error);
+      console.error("Error adding comment:", error);
     } finally {
       setLoading(false);
     }
@@ -82,7 +83,7 @@ export default function Post({ post }) {
   // Handle post sharing
   const handleShare = () => {
     navigator.clipboard.writeText(`${window.location.origin}/post/${post.id}`);
-    alert('Post link copied to clipboard!');
+    alert("Post link copied to clipboard!");
   };
 
   return (
@@ -108,11 +109,8 @@ export default function Post({ post }) {
         {post.image && <img src={post.image} className="img-fluid rounded mb-3" alt="Post" />}
 
         <div className="d-flex justify-content-between align-items-center">
-          <button
-            className={`btn ${liked ? 'btn-primary' : 'btn-outline-primary'} btn-sm`}
-            onClick={handleLike}
-          >
-            <i className={`fas ${liked ? 'fa-thumbs-up' : 'fa-thumbs-up'}`}></i> {likes} Likes
+          <button className={`btn ${liked ? "btn-primary" : "btn-outline-primary"} btn-sm`} onClick={handleLike}>
+            <i className={`fas ${liked ? "fa-thumbs-up" : "fa-thumbs-up"}`}></i> {likes} Likes
           </button>
           <button className="btn btn-outline-secondary btn-sm" onClick={() => setShowComments(!showComments)}>
             <i className="fas fa-comment"></i> {comments.length} Comments

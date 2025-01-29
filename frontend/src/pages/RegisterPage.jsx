@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import API_BASE_URL from "../utils/config"; // Import dynamic backend URL
 
 export default function RegisterPage() {
   const navigate = useNavigate();
@@ -38,7 +39,7 @@ export default function RegisterPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch('http://localhost:5000/api/auth/register-human', {
+      const response = await fetch(`${API_BASE_URL}/api/auth/register-human`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)

@@ -1,15 +1,16 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import API_BASE_URL from "../utils/config"; // Import dynamic backend URL
 
 export default function CreatePost() {
   const navigate = useNavigate();
-  const [postContent, setPostContent] = useState('');
+  const [postContent, setPostContent] = useState("");
   const [image, setImage] = useState(null);
-  const [imageData, setImageData] = useState('');
+  const [imageData, setImageData] = useState("");
   const [preview, setPreview] = useState(null);
-  const [hashtags, setHashtags] = useState('');
-  const [taggedFriends, setTaggedFriends] = useState('');
-  const [visibility, setVisibility] = useState('Public');
+  const [hashtags, setHashtags] = useState("");
+  const [taggedFriends, setTaggedFriends] = useState("");
+  const [visibility, setVisibility] = useState("Public");
   const [loading, setLoading] = useState(false);
 
   // Handle image upload and preview
@@ -33,29 +34,29 @@ export default function CreatePost() {
     setLoading(true);
 
     const postData = {
-      text: postContent.trim() || '',
+      text: postContent.trim() || "",
       image: imageData || null,
-      hashtags: hashtags ? hashtags.split(',').map(tag => tag.trim()) : [],
-      taggedFriends: taggedFriends ? taggedFriends.split(',').map(friend => friend.trim()) : [],
+      hashtags: hashtags ? hashtags.split(",").map((tag) => tag.trim()) : [],
+      taggedFriends: taggedFriends ? taggedFriends.split(",").map((friend) => friend.trim()) : [],
       visibility: visibility.toLowerCase(),
       aiGenerated: false,
     };
 
-    console.log('Post Data Preview:', JSON.stringify(postData, null, 2));
+    console.log("Post Data Preview:", JSON.stringify(postData, null, 2));
 
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem("token");
 
     if (!token) {
-      alert('Authentication token not found. Please log in.');
+      alert("Authentication token not found. Please log in.");
       setLoading(false);
       return;
     }
 
     try {
-      const response = await fetch('http://localhost:5000/api/posts/create', {
-        method: 'POST',
+      const response = await fetch(`${API_BASE_URL}/api/posts/create`, {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(postData),
@@ -64,16 +65,16 @@ export default function CreatePost() {
       const data = await response.json();
 
       if (response.ok) {
-        console.log('Post creation successful:', data);
-        alert('Post created successfully!');
-        navigate('/feed');
+        console.log("Post creation successful:", data);
+        alert("Post created successfully!");
+        navigate("/feed");
       } else {
-        console.error('Error from server:', data);
-        alert(data.error || 'Failed to create post');
+        console.error("Error from server:", data);
+        alert(data.error || "Failed to create post");
       }
     } catch (error) {
-      console.error('Error during post submission:', error);
-      alert('An error occurred while creating the post.');
+      console.error("Error during post submission:", error);
+      alert("An error occurred while creating the post.");
     } finally {
       setLoading(false);
     }
@@ -105,7 +106,9 @@ export default function CreatePost() {
               <i className="fas fa-image"></i> Upload Image
             </label>
             <input type="file" className="form-control" accept="image/*" onChange={handleImageUpload} />
-            {preview && <img src={preview} alt="Preview" className="img-fluid mt-3 rounded" style={{ maxWidth: '300px' }} />}
+            {preview && (
+              <img src={preview} alt="Preview" className="img-fluid mt-3 rounded" style={{ maxWidth: "300px" }} />
+            )}
           </div>
 
           <div className="mb-3">
@@ -145,7 +148,7 @@ export default function CreatePost() {
           </div>
 
           <button type="submit" className="btn btn-primary w-100" disabled={loading}>
-            {loading ? 'Posting...' : '🚀 Post'}
+            {loading ? "Posting..." : "🚀 Post"}
           </button>
         </form>
       </div>

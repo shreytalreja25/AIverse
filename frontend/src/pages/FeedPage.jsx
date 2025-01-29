@@ -1,31 +1,32 @@
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import Post from '../components/Post';
-import profilePlaceholder from '../assets/user-profile.png';
-import Stories from '../components/Stories';
-import RightSidebar from '../components/RightSidebar';
-import NavigationSidebar from '../components/NavigationSidebar';
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import Post from "../components/Post";
+import profilePlaceholder from "../assets/user-profile.png";
+import Stories from "../components/Stories";
+import RightSidebar from "../components/RightSidebar";
+import NavigationSidebar from "../components/NavigationSidebar";
+import API_BASE_URL from "../utils/config"; // Import dynamic backend URL
 
 export default function FeedPage() {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const navigate = useNavigate();
 
   useEffect(() => {
     const fetchPosts = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/posts?page=1&limit=10');
+        const response = await fetch(`${API_BASE_URL}/api/posts?page=1&limit=10`);
         const data = await response.json();
 
         if (!response.ok) {
-          throw new Error(data.error || 'Failed to fetch posts');
+          throw new Error(data.error || "Failed to fetch posts");
         }
 
         setPosts(data);
       } catch (error) {
         setError(error.message);
-        console.error('Error fetching posts:', error);
+        console.error("Error fetching posts:", error);
       } finally {
         setLoading(false);
       }
@@ -39,17 +40,17 @@ export default function FeedPage() {
   };
 
   const handleLike = async (postId, isLiked) => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem("token");
     if (!token) {
-      alert('You need to be logged in to like posts!');
+      alert("You need to be logged in to like posts!");
       return;
     }
 
     try {
-      const response = await fetch(`http://localhost:5000/api/posts/${postId}/like`, {
-        method: isLiked ? 'DELETE' : 'POST',
+      const response = await fetch(`${API_BASE_URL}/api/posts/${postId}/like`, {
+        method: isLiked ? "DELETE" : "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
       });
@@ -67,10 +68,10 @@ export default function FeedPage() {
           )
         );
       } else {
-        console.error('Failed to update like status');
+        console.error("Failed to update like status");
       }
     } catch (error) {
-      console.error('Error liking post:', error);
+      console.error("Error liking post:", error);
     }
   };
 
@@ -91,11 +92,11 @@ export default function FeedPage() {
             <p className="text-center">No posts available.</p>
           ) : (
             posts.map((post) => (
-              <div key={post._id} style={{ cursor: 'pointer' }} onClick={() => handlePostClick(post._id)}>
+              <div key={post._id} style={{ cursor: "pointer" }} onClick={() => handlePostClick(post._id)}>
                 <Post
                   post={{
                     id: post._id,
-                    username: post.authorInfo?.username || 'Unknown',
+                    username: post.authorInfo?.username || "Unknown",
                     profileImage: post.authorInfo?.profileImage || profilePlaceholder,
                     content: post.content.text,
                     image: post.content.image || null,
@@ -103,8 +104,8 @@ export default function FeedPage() {
                     liked: post.liked || false,
                     comments: post.comments.length,
                     time: new Date(post.createdAt).toLocaleString(),
-                    firstName: post.authorInfo?.firstName || '',
-                    lastName: post.authorInfo?.lastName || '',
+                    firstName: post.authorInfo?.firstName || "",
+                    lastName: post.authorInfo?.lastName || "",
                   }}
                   onLike={() => handleLike(post._id, post.liked)}
                 />

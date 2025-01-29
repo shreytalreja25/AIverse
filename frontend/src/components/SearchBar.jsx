@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import API_BASE_URL from "../utils/config"; // Import dynamic backend URL
 
 export default function SearchBar() {
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState("");
   const [results, setResults] = useState([]);
   const [showDropdown, setShowDropdown] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
@@ -10,7 +11,7 @@ export default function SearchBar() {
 
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
-      if (query.trim() !== '') {
+      if (query.trim() !== "") {
         fetchSearchResults();
       } else {
         setResults([]);
@@ -23,12 +24,12 @@ export default function SearchBar() {
 
   const fetchSearchResults = async () => {
     try {
-      const response = await fetch(`http://localhost:5000/api/search?query=${query}`);
+      const response = await fetch(`${API_BASE_URL}/api/search?query=${query}`);
       const data = await response.json();
       setResults([...data.users, ...data.posts]);
       setShowDropdown(true);
     } catch (error) {
-      console.error('Error fetching search results:', error);
+      console.error("Error fetching search results:", error);
     }
   };
 
@@ -63,11 +64,11 @@ export default function SearchBar() {
           value={query}
           onChange={handleSearchChange}
           style={{
-            width: '450px',
-            maxWidth: '100%',
-            fontSize: '16px',
-            padding: '10px',
-            border: '1px solid #ccc',
+            width: "450px",
+            maxWidth: "100%",
+            fontSize: "16px",
+            padding: "10px",
+            border: "1px solid #ccc",
           }}
         />
         <button className="btn btn-primary rounded-pill px-4" type="submit">
@@ -79,47 +80,49 @@ export default function SearchBar() {
         <div
           className="dropdown-menu show w-100 shadow-lg overflow-auto"
           style={{
-            maxHeight: '300px',
-            borderRadius: '10px',
-            overflowY: 'auto',
-            position: 'absolute',
-            zIndex: '1000',
-            background: '#333',
-            color: '#fff',
-            width: '450px',
-            boxShadow: '0 4px 8px rgba(0,0,0,0.2)',
+            maxHeight: "300px",
+            borderRadius: "10px",
+            overflowY: "auto",
+            position: "absolute",
+            zIndex: "1000",
+            background: "#333",
+            color: "#fff",
+            width: "450px",
+            boxShadow: "0 4px 8px rgba(0,0,0,0.2)",
           }}
         >
           {results.map((result, index) => (
             <div
               key={index}
               className={`dropdown-item d-flex align-items-center ${
-                activeIndex === index ? 'bg-primary text-white' : ''
+                activeIndex === index ? "bg-primary text-white" : ""
               }`}
               style={{
-                cursor: 'pointer',
-                padding: '15px',
-                borderBottom: '1px solid rgba(255,255,255,0.1)',
-                fontSize: '14px',
+                cursor: "pointer",
+                padding: "15px",
+                borderBottom: "1px solid rgba(255,255,255,0.1)",
+                fontSize: "14px",
               }}
               onClick={() => handleResultClick(result)}
             >
               <img
                 src={result.profileImage || `https://api.dicebear.com/7.x/avataaars/svg?seed=${result.firstName}`}
-                alt={result.username || 'Post'}
+                alt={result.username || "Post"}
                 className="rounded-circle me-2"
-                style={{ width: '40px', height: '40px', border: '2px solid #fff' }}
+                style={{ width: "40px", height: "40px", border: "2px solid #fff" }}
               />
               <div>
                 {result.username ? (
                   <div>
-                    <strong className="text-white">{result.firstName} {result.lastName}</strong>
+                    <strong className="text-white">
+                      {result.firstName} {result.lastName}
+                    </strong>
                     <br />
                     <small className="text-secondary">@{result.username}</small>
                   </div>
                 ) : (
                   <div>
-                    <i className="fas fa-file-alt text-info"></i>{' '}
+                    <i className="fas fa-file-alt text-info"></i>{" "}
                     <span className="text-white">{result.content.text.slice(0, 50)}...</span>
                   </div>
                 )}

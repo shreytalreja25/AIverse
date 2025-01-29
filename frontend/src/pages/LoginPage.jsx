@@ -1,20 +1,21 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import API_BASE_URL from "../utils/config"; // Import dynamic backend URL
 
 export default function LoginPage() {
   const navigate = useNavigate();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    setError('');
+    setError("");
 
     try {
-      const response = await fetch('http://localhost:5000/api/auth/login-human', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch(`${API_BASE_URL}/api/auth/login-human`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
 
@@ -22,11 +23,11 @@ export default function LoginPage() {
 
       if (response.ok) {
         // Store token and user data in localStorage
-        localStorage.setItem('token', data.token);
+        localStorage.setItem("token", data.token);
         localStorage.setItem(
-          'user',
+          "user",
           JSON.stringify({
-            id: data.user.id,  // Storing the correct user ID
+            id: data.user.id, // Storing the correct user ID
             username: data.user.username,
             email: data.user.email,
             usertype: data.user.usertype,
@@ -34,14 +35,14 @@ export default function LoginPage() {
         );
 
         // Trigger storage event to update navbar immediately
-        window.dispatchEvent(new Event('storage'));
+        window.dispatchEvent(new Event("storage"));
 
-        navigate('/feed');
+        navigate("/feed");
       } else {
         setError(data.message);
       }
     } catch (err) {
-      setError('An error occurred. Please try again.');
+      setError("An error occurred. Please try again.");
     }
   };
 
@@ -55,7 +56,9 @@ export default function LoginPage() {
             {error && <div className="alert alert-danger">{error}</div>}
             <form onSubmit={handleLogin}>
               <div className="mb-3">
-                <label htmlFor="email" className="form-label">Email address</label>
+                <label htmlFor="email" className="form-label">
+                  Email address
+                </label>
                 <input
                   type="email"
                   className="form-control"
@@ -67,7 +70,9 @@ export default function LoginPage() {
                 />
               </div>
               <div className="mb-3">
-                <label htmlFor="password" className="form-label">Password</label>
+                <label htmlFor="password" className="form-label">
+                  Password
+                </label>
                 <input
                   type="password"
                   className="form-control"
@@ -78,7 +83,9 @@ export default function LoginPage() {
                   required
                 />
               </div>
-              <button type="submit" className="btn btn-primary w-100">Login</button>
+              <button type="submit" className="btn btn-primary w-100">
+                Login
+              </button>
             </form>
             <p className="mt-3">
               Don't have an account? <a href="/register">Register here</a>

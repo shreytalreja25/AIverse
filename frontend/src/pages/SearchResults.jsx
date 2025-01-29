@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import API_BASE_URL from "../utils/config"; // Import dynamic backend URL
 
 export default function SearchResults() {
   const [results, setResults] = useState({ users: [], posts: [] });
@@ -19,7 +20,7 @@ export default function SearchResults() {
   const fetchResults = async (searchTerm) => {
     setLoading(true);
     try {
-      const response = await fetch(`http://localhost:5000/api/search?query=${searchTerm}`);
+      const response = await fetch(`${API_BASE_URL}/api/search?query=${searchTerm}`);
       const data = await response.json();
       setResults(data);
     } catch (error) {
