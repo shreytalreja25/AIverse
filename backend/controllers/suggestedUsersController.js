@@ -50,7 +50,6 @@ const getSuggestedUsers = async (req, res) => {
       .toArray();
 
     if (suggestedUsers.length === 0) {
-      console.log('⚠️ No suggested users found.');
       return res.status(200).json({ message: 'No users found with similar interests.', users: [] });
     }
 
