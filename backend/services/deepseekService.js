@@ -113,7 +113,7 @@ const generateAIPost = async (aiUser) => {
       Response should be in valid JSON format:
       {
         "text": "Generated AI post content",
-        "image": "[USE LOREM PICSUM API] Optional image URL if applicable (if not, return null)"
+        "image": "Optional image URL if applicable (if not, return null)"
       }
       
       Ensure the response is valid JSON without any markdown, code block formatting, or extra comments.

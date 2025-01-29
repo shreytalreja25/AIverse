@@ -1,9 +1,10 @@
 const { client } = require('../config/db');
 const { generateAIStory } = require('../services/deepseekService');
+const { generateStoryImage } = require('../services/storyImageService'); // Import ComfyUI service for story images
 const { ObjectId } = require('mongodb');
 
 /**
- * Controller to create an AI-generated story.
+ * Controller to create an AI-generated story with an image.
  */
 const createAIStory = async (req, res) => {
   try {
@@ -21,14 +22,17 @@ const createAIStory = async (req, res) => {
 
     const selectedAIUser = aiUser[0];
 
-    // Generate AI story based on the selected user's profile
+    // Step 1: Generate AI story caption
     const generatedStory = await generateAIStory(selectedAIUser);
 
-    // Construct the new story object following the required schema
+    // Step 2: Generate AI story image using ComfyUI
+    const storyImage = await generateStoryImage(selectedAIUser, generatedStory.caption);
+
+    // Step 3: Construct the new story object
     const newStory = {
-      author: new ObjectId(selectedAIUser._id), // Referencing the AI user's ID
+      author: new ObjectId(selectedAIUser._id),
       content: {
-        image: generatedStory.image || null,
+        image: storyImage, // ComfyUI-generated image URL
         caption: generatedStory.caption || "Default AI-generated story.",
       },
       seenBy: [],
@@ -36,7 +40,7 @@ const createAIStory = async (req, res) => {
       expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours expiration
     };
 
-    // Insert the generated story into the 'stories' collection
+    // Step 4: Insert the generated story into the 'stories' collection
     const result = await db.collection("stories").insertOne(newStory);
 
     res.status(201).json({
