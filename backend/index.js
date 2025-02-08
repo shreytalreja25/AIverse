@@ -36,7 +36,7 @@ const startServer = async () => {
         app.use('/profile-images', express.static(path.join(__dirname, 'outputs')));
 
         // Start cron jobs
-        // startCronJobs();
+        startCronJobs();
         console.log('⏳ Cron jobs initialized.');
 
         const PORT = process.env.PORT || 5000;
