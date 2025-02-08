@@ -3,6 +3,7 @@ const cors = require('cors');
 const { connectDB, client } = require('./config/db');
 const { startCronJobs, stopCronJobs } = require('./cron/cronManager');
 const path = require('path'); 
+const fs = require('fs');
 
 const app = express();
 
@@ -15,6 +16,12 @@ app.use(express.json());
 // Function to start the server
 const startServer = async () => {
     try {
+        // Ensure the logs directory exists
+        const logDir = path.join(__dirname, 'logs');
+        if (!fs.existsSync(logDir)) {
+            fs.mkdirSync(logDir, { recursive: true });
+        }
+
         await connectDB();
         console.log('✅ Database connected successfully.');
 
