@@ -257,7 +257,7 @@ export default function PostPage() {
               {similarPosts.length > 0 ? (
                 similarPosts.map((p) => (
                   <li key={p._id} className="mb-2">
-                    <Link to={`/post/${p._id}`} className="text-decoration-none text-dark">
+                    <Link to={`/post/${p._id}`} className="text-decoration-none">
                       {p.content.text}
                     </Link>
                   </li>
