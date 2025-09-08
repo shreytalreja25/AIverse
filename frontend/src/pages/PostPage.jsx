@@ -2,8 +2,11 @@ import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import profilePlaceholder from '../assets/user-profile.png';
 import API_BASE_URL from "../utils/config"; // Import dynamic backend URL
+import { useNotify } from "../components/Notify.jsx";
+import { getValidToken, clearAuth } from "../utils/auth.js";
 
 export default function PostPage() {
+  const { warning, error: notifyError, success } = useNotify();
   const { id } = useParams();
   const [post, setPost] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -92,11 +95,8 @@ export default function PostPage() {
   }, [id]);
 
   const handleLike = async () => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      alert('You need to be logged in to like posts!');
-      return;
-    }
+    const token = getValidToken();
+    if (!token) return warning('You need to be logged in to like posts!');
 
     try {
       const response = await fetch(`${API_BASE_URL}/api/posts/${id}/like`, {
@@ -111,7 +111,13 @@ export default function PostPage() {
         setLiked(!liked);
         setLikes((prevLikes) => (liked ? prevLikes - 1 : prevLikes + 1));
       } else {
-        alert('Failed to update like.');
+        if (response.status === 401) {
+          notifyError('Session expired. Please log in again.');
+          clearAuth();
+          window.location.href = '/login';
+        } else {
+          notifyError('Failed to update like.');
+        }
       }
     } catch (error) {
       console.error('Error updating like:', error);
@@ -120,11 +126,8 @@ export default function PostPage() {
 
   const handleAddComment = async () => {
     if (newComment.trim()) {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        alert('You need to be logged in to comment!');
-        return;
-      }
+      const token = getValidToken();
+      if (!token) return warning('You need to be logged in to comment!');
 
       try {
         const response = await fetch(`${API_BASE_URL}/api/posts/${id}/comment`, {
@@ -140,7 +143,13 @@ export default function PostPage() {
           setComments([...comments, { user: 'You', text: newComment }]);
           setNewComment('');
         } else {
-          alert('Failed to add comment');
+          if (response.status === 401) {
+            notifyError('Session expired. Please log in again.');
+            clearAuth();
+            window.location.href = '/login';
+          } else {
+            notifyError('Failed to add comment');
+          }
         }
       } catch (error) {
         console.error('Error adding comment:', error);
@@ -150,7 +159,7 @@ export default function PostPage() {
 
   const handleShare = () => {
     navigator.clipboard.writeText(window.location.href);
-    alert('Post link copied to clipboard!');
+    success('Post link copied to clipboard!');
   };
 
   if (loading) return <p className="text-center">Loading post...</p>;

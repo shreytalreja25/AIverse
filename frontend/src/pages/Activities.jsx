@@ -4,6 +4,7 @@ import API_BASE_URL from "../utils/config";
 import { generateActivities } from "../services/activities/geminiClient";
 import ActivitiesList from "../components/activities/ActivitiesList";
 import ActivitiesMap from "../components/activities/ActivitiesMap";
+import { useNotify } from "../components/Notify.jsx";
 
 // Animated background (module scope to avoid styled-components warnings)
 const fall = keyframes`
@@ -57,6 +58,7 @@ const Container = styled.div`
 `;
 
 export default function Activities() {
+  const { warning } = useNotify();
   const [city, setCity] = useState("");
   const [country, setCountry] = useState("");
   const [items, setItems] = useState([]);
@@ -107,7 +109,7 @@ export default function Activities() {
   }, [city, country]);
 
   const useMyLocation = () => {
-    if (!("geolocation" in navigator)) return alert("Geolocation not supported");
+    if (!("geolocation" in navigator)) return warning("Geolocation not supported");
     navigator.geolocation.getCurrentPosition(async pos => {
       const { latitude, longitude } = pos.coords;
       try {

@@ -38,6 +38,16 @@ export default function Navbar() {
     if (!isLoggedIn) setShowDropdown(false);
   }, [isLoggedIn]);
 
+  // Support opening notifications from MobileBottomNav via a window event
+  useEffect(() => {
+    const handler = () => {
+      setShowDropdown((s) => !s);
+      if (unread) markAllRead();
+    };
+    window.addEventListener('openNotifications', handler);
+    return () => window.removeEventListener('openNotifications', handler);
+  }, [unread, markAllRead]);
+
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
@@ -54,8 +64,6 @@ export default function Navbar() {
 
   const handleViewProfile = async () => {
     if (!userId) {
-      // Replaced alert with notification system
-      // Will be shown via toasts already; keep UX quiet here
       console.warn("User ID not found. Please log in again.");
       return;
     }

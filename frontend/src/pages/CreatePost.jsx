@@ -1,9 +1,12 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import API_BASE_URL from "../utils/config"; // Import dynamic backend URL
+import { useNotify } from "../components/Notify.jsx";
+import { getValidToken, clearAuth } from "../utils/auth.js";
 
 export default function CreatePost() {
   const navigate = useNavigate();
+  const { error: notifyError, success, warning } = useNotify();
   const [postContent, setPostContent] = useState("");
   const [image, setImage] = useState(null);
   const [imageData, setImageData] = useState("");
@@ -44,10 +47,10 @@ export default function CreatePost() {
 
     console.log("Post Data Preview:", JSON.stringify(postData, null, 2));
 
-    const token = localStorage.getItem("token");
+    const token = getValidToken();
 
     if (!token) {
-      alert("Authentication token not found. Please log in.");
+      warning("Authentication token not found. Please log in.");
       setLoading(false);
       return;
     }
@@ -69,15 +72,21 @@ export default function CreatePost() {
 
       if (response.ok) {
         console.log("Post creation successful:", data);
-        alert("Post created successfully!");
+        success("Post created successfully!");
         navigate("/feed");
       } else {
         console.error("Error from server:", data);
-        alert(data.error || "Failed to create post");
+        if (response.status === 401) {
+          notifyError(data.message || "Session expired. Please log in again.");
+          clearAuth();
+          navigate('/login');
+        } else {
+          notifyError(data.error || "Failed to create post");
+        }
       }
     } catch (error) {
       console.error("Error during post submission:", error);
-      alert("An error occurred while creating the post.");
+      notifyError("An error occurred while creating the post.");
     } finally {
       setLoading(false);
     }

@@ -2,8 +2,11 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import profilePlaceholder from "../assets/user-profile.png";
 import API_BASE_URL from "../utils/config"; // Import dynamic backend URL
+import { useNotify } from "./Notify.jsx";
+import { getValidToken, clearAuth } from "../utils/auth.js";
 
 export default function Post({ post }) {
+  const { warning, error: notifyError, success } = useNotify();
   const [likes, setLikes] = useState(post.likes.length || 0);
   const [liked, setLiked] = useState(post.liked || false);
   const [comments, setComments] = useState(post.comments || []);
@@ -21,11 +24,8 @@ export default function Post({ post }) {
 
   // Handle like/unlike toggle
   const handleLike = async () => {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      alert("You need to be logged in to like posts!");
-      return;
-    }
+    const token = getValidToken();
+    if (!token) return warning("You need to be logged in to like posts!");
 
     setLiked(!liked);
     setLikes((prevLikes) => (liked ? prevLikes - 1 : prevLikes + 1));
@@ -40,11 +40,15 @@ export default function Post({ post }) {
       });
 
       if (!response.ok) {
+        if (response.status === 401) {
+          clearAuth();
+          return notifyError("Session expired. Please log in again.");
+        }
         throw new Error("Failed to update like");
       }
     } catch (error) {
       console.error("Error updating like:", error);
-      alert("Failed to update like. Please try again.");
+      notifyError("Failed to update like. Please try again.");
       setLiked(!liked);
       setLikes((prevLikes) => (liked ? prevLikes + 1 : prevLikes - 1));
     }
@@ -61,7 +65,7 @@ export default function Post({ post }) {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          Authorization: `Bearer ${getValidToken()}`,
         },
         body: JSON.stringify({ text: newComment }),
       });
@@ -71,7 +75,12 @@ export default function Post({ post }) {
         setComments([...comments, newCommentData]);
         setNewComment("");
       } else {
-        alert("Failed to add comment");
+        if (response.status === 401) {
+          clearAuth();
+          notifyError("Session expired. Please log in again.");
+        } else {
+          notifyError("Failed to add comment");
+        }
       }
     } catch (error) {
       console.error("Error adding comment:", error);
@@ -83,7 +92,7 @@ export default function Post({ post }) {
   // Handle post sharing
   const handleShare = () => {
     navigator.clipboard.writeText(`${window.location.origin}/post/${post.id}`);
-    alert("Post link copied to clipboard!");
+    success("Post link copied to clipboard!");
   };
 
   return (

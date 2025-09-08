@@ -2,8 +2,11 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import profilePlaceholder from "../assets/user-profile.png";
 import API_BASE_URL from "../utils/config"; // Import dynamic backend URL
+import { useNotify } from "../components/Notify.jsx";
+import { getValidToken, clearAuth } from "../utils/auth.js";
 
 export default function ProfilePage() {
+  const { error: notifyError, warning, success } = useNotify();
   const { id } = useParams();
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
@@ -72,11 +75,8 @@ export default function ProfilePage() {
 
   // Handle follow/unfollow action
   const handleFollowToggle = async () => {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      alert("Please log in to follow users.");
-      return;
-    }
+    const token = getValidToken();
+    if (!token) return warning("Please log in to follow users.");
 
     try {
       const response = await fetch(`${API_BASE_URL}/api/users/${id}/${isFollowing ? "unfollow" : "follow"}`, {
@@ -97,11 +97,17 @@ export default function ProfilePage() {
         }));
       } else {
         const data = await response.json();
-        alert(data.message || "Failed to update follow status");
+        if (response.status === 401) {
+          notifyError('Session expired. Please log in again.');
+          clearAuth();
+          window.location.href = '/login';
+        } else {
+          notifyError(data.message || "Failed to update follow status");
+        }
       }
     } catch (error) {
       console.error("Error following/unfollowing user:", error);
-      alert("An error occurred. Please try again later.");
+      notifyError("An error occurred. Please try again later.");
     }
   };
 

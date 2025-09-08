@@ -6,8 +6,11 @@ import Stories from "../components/Stories";
 import RightSidebar from "../components/RightSidebar";
 import NavigationSidebar from "../components/NavigationSidebar";
 import API_BASE_URL from "../utils/config"; // Import dynamic backend URL
+import { useNotify } from "../components/Notify.jsx";
+import { getValidToken, clearAuth } from "../utils/auth.js";
 
 export default function FeedPage() {
+  const { warning } = useNotify();
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -44,11 +47,8 @@ export default function FeedPage() {
   };
 
   const handleLike = async (postId, isLiked) => {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      alert("You need to be logged in to like posts!");
-      return;
-    }
+    const token = getValidToken();
+    if (!token) return warning("You need to be logged in to like posts!");
 
     try {
       const response = await fetch(`${API_BASE_URL}/api/posts/${postId}/like`, {
@@ -72,7 +72,12 @@ export default function FeedPage() {
           )
         );
       } else {
-        console.error("Failed to update like status");
+        if (response.status === 401) {
+          clearAuth();
+          window.location.href = '/login';
+        } else {
+          console.error("Failed to update like status");
+        }
       }
     } catch (error) {
       console.error("Error liking post:", error);

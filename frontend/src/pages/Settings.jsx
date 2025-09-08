@@ -1,7 +1,10 @@
 import { useEffect, useState } from 'react';
 import API_BASE_URL from '../utils/config';
+import { useNotify } from '../components/Notify.jsx';
+import { getValidToken, clearAuth } from '../utils/auth.js';
 
 export default function Settings() {
+  const { success, error: notifyError, warning } = useNotify();
   const [darkMode, setDarkMode] = useState(localStorage.getItem('darkMode') === 'enabled');
   const [locationCity, setLocationCity] = useState('');
   const [locationCountry, setLocationCountry] = useState('');
@@ -33,7 +36,7 @@ export default function Settings() {
   };
 
   const useMyLocation = () => {
-    if (!('geolocation' in navigator)) return alert('Geolocation not supported');
+    if (!('geolocation' in navigator)) return warning('Geolocation not supported');
     navigator.geolocation.getCurrentPosition(async (pos) => {
       const { latitude, longitude } = pos.coords;
       try {
@@ -49,8 +52,13 @@ export default function Settings() {
     setSaving(true);
     try {
       const user = JSON.parse(localStorage.getItem('user'));
-      const token = localStorage.getItem('token');
-      await fetch(`${API_BASE_URL}/api/profile`, {
+      const token = getValidToken();
+      if (!token) {
+        notifyError('Session expired. Please log in again.');
+        clearAuth();
+        return;
+      }
+      const res = await fetch(`${API_BASE_URL}/api/profile`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -60,9 +68,14 @@ export default function Settings() {
           location: { city: locationCity, country: locationCountry }
         })
       });
-      alert('Settings saved');
+      if (res.status === 401) {
+        notifyError('Session expired. Please log in again.');
+        clearAuth();
+      } else {
+        success('Settings saved');
+      }
     } catch (e) {
-      alert('Failed to save settings');
+      notifyError('Failed to save settings');
     } finally {
       setSaving(false);
     }

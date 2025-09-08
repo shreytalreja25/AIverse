@@ -1,14 +1,27 @@
 // Resolve API base URL with robust fallbacks and helpful diagnostics
 // Note: Avoid using `typeof import` (invalid). Vite guarantees `import.meta` in ESM.
-const resolvedFromEnv = (import.meta && import.meta.env && import.meta.env.VITE_API_URL) || '';
-const resolvedFromWindow = typeof window !== 'undefined' ? window.__VITE_API_URL : '';
+const resolvedFromEnv = (import.meta && import.meta.env && (import.meta.env.VITE_API_URL || import.meta.env.VITE_PUBLIC_API_URL)) || '';
+const resolvedFromWindow = typeof window !== 'undefined' ? (window.__VITE_API_URL || window.__API_BASE_URL) : '';
 
 const defaultProductionUrl = 'https://aiverse-sbs6.onrender.com';
 const defaultLocalUrl = 'http://localhost:5000';
 
-const API_BASE_URL = (resolvedFromEnv && resolvedFromEnv.trim())
+let chosen = (resolvedFromEnv && resolvedFromEnv.trim())
   || (resolvedFromWindow && String(resolvedFromWindow).trim())
   || (import.meta.env && import.meta.env.PROD ? defaultProductionUrl : defaultLocalUrl);
+
+// Normalize and harden against accidental frontend origin usage
+if (typeof window !== 'undefined') {
+  const origin = window.location.origin;
+  const isHostedFrontend = /vercel\.app$|netlify\.app$|github\.io$/.test(window.location.hostname);
+  const isEmpty = !chosen || !/^https?:\/\//i.test(chosen);
+  const accidentallyFrontend = chosen === origin;
+  if ((isHostedFrontend && (isEmpty || accidentallyFrontend)) && (import.meta.env && import.meta.env.PROD)) {
+    chosen = defaultProductionUrl;
+  }
+}
+
+const API_BASE_URL = chosen.replace(/\/$/, '');
 
 if (typeof window !== 'undefined') {
   // Console diagnostics to verify which value is being used at runtime

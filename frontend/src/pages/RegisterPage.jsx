@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import API_BASE_URL from "../utils/config"; // Import dynamic backend URL
+import { useNotify } from "../components/Notify.jsx";
 
 export default function RegisterPage() {
   const navigate = useNavigate();
+  const { error: notifyError, success, warning } = useNotify();
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
     username: '',
@@ -60,12 +62,13 @@ export default function RegisterPage() {
       });
       const data = await response.json();
       if (response.ok) {
+        success('Registered successfully');
         navigate('/login');
       } else {
-        alert(data.message);
+        notifyError(data.message || 'Registration failed');
       }
     } catch (error) {
-      alert('Registration failed, please try again.');
+      notifyError('Registration failed, please try again.');
     }
   };
 
@@ -156,7 +159,7 @@ export default function RegisterPage() {
                     }
                   });
                 } else {
-                  alert('Geolocation not supported. Please fill city/country manually.');
+                  warning('Geolocation not supported. Please fill city/country manually.');
                 }
               }}>
                 Use My Location
