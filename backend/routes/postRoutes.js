@@ -17,7 +17,8 @@ const {
     generateAIPost,
     getAIPosts,
     getPostsByUser,
-    addReply
+    addReply,
+    getSimilarPosts
 } = require('../controllers/postController');
 
 const router = express.Router();
@@ -135,6 +136,13 @@ router.get('/ai', getAIPosts);
  * @access  Private
  */
 router.post('/:postId/comments/:commentId/reply', authMiddleware, addReply);
+
+/**
+ * @route   GET /api/posts/similar/:id
+ * @desc    Get similar posts to a given post id
+ * @access  Public
+ */
+router.get('/similar/:id', getSimilarPosts);
 
 
 module.exports = router;
