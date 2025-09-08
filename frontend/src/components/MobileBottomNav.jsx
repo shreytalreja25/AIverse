@@ -23,9 +23,12 @@ export default function MobileBottomNav({ isLoggedIn, onToggleDark, darkMode }) 
         </Link>
         {/* Create Post (mobile only) */}
         {isLoggedIn && <Link to="/create-post" className="btn btn-link text-light"><i className="fas fa-plus-circle"></i></Link>}
-        <button className="btn btn-link text-light" onClick={onToggleDark}>
-          <i className={darkMode ? "fas fa-moon" : "fas fa-sun"}></i>
-        </button>
+        {/* Notifications moved to bottom bar */}
+        {isLoggedIn && (
+          <button className="btn btn-link text-light position-relative" onClick={() => window.dispatchEvent(new Event('openNotifications'))}>
+            <i className="fas fa-bell"></i>
+          </button>
+        )}
         {/* Profile (mobile only) */}
         {isLoggedIn && <Link to={profilePath} className="btn btn-link text-light"><i className="fas fa-user"></i></Link>}
       </div>

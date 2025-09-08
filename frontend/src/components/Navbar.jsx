@@ -89,18 +89,27 @@ export default function Navbar() {
           {/* <span className="fw-bold">AIverse</span> */}
         </Link>
 
-        {/* Right-aligned hamburger */}
-        <button
-          className="navbar-toggler ms-auto"
-          type="button"
-          data-bs-toggle="collapse"
-          data-bs-target="#navbarSupportedContent"
-          aria-controls="navbarSupportedContent"
-          aria-expanded="false"
-          aria-label="Toggle navigation"
-        >
-          <span className="navbar-toggler-icon"></span>
-        </button>
+        {/* Mobile: dark mode toggle to the left of hamburger */}
+        <div className="d-flex align-items-center d-lg-none ms-auto">
+          <button
+            className={`btn ${darkMode ? "btn-dark" : "btn-outline-dark"} me-2`}
+            onClick={toggleDarkMode}
+            aria-label="Toggle dark mode"
+          >
+            <i className={darkMode ? "fas fa-moon" : "fas fa-sun"}></i>
+          </button>
+          <button
+            className="navbar-toggler"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent"
+            aria-expanded="false"
+            aria-label="Toggle navigation"
+          >
+            <span className="navbar-toggler-icon"></span>
+          </button>
+        </div>
 
         <div className="collapse navbar-collapse" id="navbarSupportedContent">
           {/* Search centered on large screens, full-width on mobile */}
@@ -110,8 +119,8 @@ export default function Navbar() {
 
           <ul className="navbar-nav ms-auto align-items-lg-center gap-2">
             {isLoggedIn && (
-              <li className="nav-item">
-                <button className="btn btn-outline-warning position-relative btn-responsive" onClick={markNotificationsAsRead}>
+              <li className="nav-item d-none d-lg-block">
+                <button className="btn btn-outline-warning position-relative" onClick={markNotificationsAsRead}>
                   <i className="fas fa-bell"></i>
                   {unreadCount > 0 && (
                     <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
