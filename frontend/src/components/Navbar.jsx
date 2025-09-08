@@ -3,13 +3,12 @@ import { useState, useEffect } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import logo from "../assets/AIverse-logo.png";
 import SearchBar from "./SearchBar";
-import API_BASE_URL from "../utils/config"; // Import dynamic backend URL
+import API_BASE_URL from "../utils/config";
 
 export default function Navbar() {
   const navigate = useNavigate();
   const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem("token"));
   const [userId, setUserId] = useState("");
-  const [username, setUsername] = useState("");
   const [darkMode, setDarkMode] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -19,52 +18,37 @@ export default function Navbar() {
       setIsLoggedIn(!!localStorage.getItem("token"));
       const userData = JSON.parse(localStorage.getItem("user"));
       if (userData) {
-        setUsername(userData.username);
         setUserId(userData.id);
       }
     };
-
     handleStorageChange();
     window.addEventListener("storage", handleStorageChange);
-
-    return () => {
-      window.removeEventListener("storage", handleStorageChange);
-    };
+    return () => window.removeEventListener("storage", handleStorageChange);
   }, []);
 
   useEffect(() => {
     const storedDarkMode = localStorage.getItem("darkMode");
-    if (storedDarkMode === "enabled") {
-      setDarkMode(true);
-      document.body.classList.add("dark-theme");
-    } else {
-      setDarkMode(false);
-      document.body.classList.remove("dark-theme");
-    }
+    const enabled = storedDarkMode === "enabled";
+    setDarkMode(enabled);
+    document.body.classList.toggle("dark-theme", enabled);
   }, []);
 
   useEffect(() => {
-    if (isLoggedIn) {
-      fetchNotifications();
-    }
+    if (isLoggedIn) fetchNotifications();
   }, [isLoggedIn]);
 
   const fetchNotifications = async () => {
-    const mockNotifications = [
+    const mock = [
       { id: 1, message: "John Doe liked your post", read: false },
       { id: 2, message: "You have a new follower: Alice", read: false },
-      { id: 3, message: "Jane mentioned you in a comment", read: true },
+      { id: 3, message: "Jane mentioned you in a comment", read: true }
     ];
-    setNotifications(mockNotifications);
-    setUnreadCount(mockNotifications.filter((n) => !n.read).length);
+    setNotifications(mock);
+    setUnreadCount(mock.filter((n) => !n.read).length);
   };
 
   const markNotificationsAsRead = () => {
-    const updatedNotifications = notifications.map((notif) => ({
-      ...notif,
-      read: true,
-    }));
-    setNotifications(updatedNotifications);
+    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
     setUnreadCount(0);
   };
 
@@ -76,10 +60,10 @@ export default function Navbar() {
   };
 
   const toggleDarkMode = () => {
-    const newDarkMode = !darkMode;
-    setDarkMode(newDarkMode);
-    document.body.classList.toggle("dark-theme", newDarkMode);
-    localStorage.setItem("darkMode", newDarkMode ? "enabled" : "disabled");
+    const next = !darkMode;
+    setDarkMode(next);
+    document.body.classList.toggle("dark-theme", next);
+    localStorage.setItem("darkMode", next ? "enabled" : "disabled");
   };
 
   const handleViewProfile = async () => {
@@ -87,86 +71,100 @@ export default function Navbar() {
       alert("User ID not found. Please log in again.");
       return;
     }
-
     try {
       const response = await fetch(`${API_BASE_URL}/api/profile/${userId}`);
-      if (!response.ok) {
-        throw new Error("Failed to fetch profile data");
-      }
+      if (!response.ok) throw new Error("Failed to fetch profile data");
       navigate(`/profile/${userId}`);
-    } catch (error) {
-      console.error("Error fetching profile:", error);
+    } catch (err) {
+      console.error("Error fetching profile:", err);
       alert("Failed to load profile. Please try again later.");
     }
   };
 
   return (
-    <nav className="navbar navbar-expand-lg navbar-light bg-light shadow-sm py-2">
-      <div className="container d-flex justify-content-between align-items-center">
-        <Link className="navbar-brand" to="/">
-          <img src={logo} alt="AIverse Logo" height="40" />
+    <nav className="navbar navbar-expand-lg bg-light shadow-sm py-2">
+      <div className="container">
+        <Link className="navbar-brand d-flex align-items-center" to="/">
+          <img src={logo} alt="AIverse Logo" height="40" className="me-2" />
+          {/* <span className="fw-bold">AIverse</span> */}
         </Link>
-        <div className="d-flex flex-grow-1 mx-3">{isLoggedIn && <SearchBar />}</div>
-        <div className="d-flex align-items-center gap-2">
-          {isLoggedIn && (
-            <>
-              <button
-                className="btn btn-outline-warning position-relative"
-                onClick={markNotificationsAsRead}
-                style={{ minWidth: "80px" }}
-              >
-                <i className="fas fa-bell"></i>
-                {unreadCount > 0 && (
-                  <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                    {unreadCount}
-                  </span>
-                )}
-              </button>
 
-              <Link className="btn btn-outline-info" to="/feed" style={{ minWidth: "80px" }}>
-                <i className="fas fa-rss"></i> Feed
-              </Link>
-            </>
-          )}
+        {/* Right-aligned hamburger */}
+        <button
+          className="navbar-toggler ms-auto"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navbarSupportedContent"
+          aria-controls="navbarSupportedContent"
+          aria-expanded="false"
+          aria-label="Toggle navigation"
+        >
+          <span className="navbar-toggler-icon"></span>
+        </button>
 
-          <button
-            className={`btn ${darkMode ? "btn-dark" : "btn-outline-dark"}`}
-            onClick={toggleDarkMode}
-            style={{ minWidth: "100px" }}
-          >
-            <i className={darkMode ? "fas fa-moon" : "fas fa-sun"}></i> {darkMode ? "Dark" : "Light"}
-          </button>
+        <div className="collapse navbar-collapse" id="navbarSupportedContent">
+          {/* Search centered on large screens, full-width on mobile */}
+          <div className="mx-lg-3 my-2 my-lg-0 flex-grow-1">
+            {isLoggedIn && <SearchBar />}
+          </div>
 
-          {isLoggedIn ? (
-            <>
-              <Link className="btn btn-success" to="/create-post" style={{ minWidth: "120px" }}>
-                <i className="fas fa-plus-circle"></i> Post
-              </Link>
-              <button
-                className="btn btn-outline-primary"
-                onClick={handleViewProfile}
-                style={{ minWidth: "120px" }}
-              >
-                <i className="fas fa-user-circle"></i> Profile
+          <ul className="navbar-nav ms-auto align-items-lg-center gap-2">
+            {isLoggedIn && (
+              <li className="nav-item">
+                <button className="btn btn-outline-warning position-relative btn-responsive" onClick={markNotificationsAsRead}>
+                  <i className="fas fa-bell"></i>
+                  {unreadCount > 0 && (
+                    <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                      {unreadCount}
+                    </span>
+                  )}
+                </button>
+              </li>
+            )}
+
+            {isLoggedIn && (
+              <li className="nav-item d-none d-lg-block">
+                <Link className="btn btn-outline-info" to="/feed">
+                  <i className="fas fa-rss"></i> Feed
+                </Link>
+              </li>
+            )}
+
+            <li className="nav-item d-none d-lg-block">
+              <button className={`btn ${darkMode ? "btn-dark" : "btn-outline-dark"}`} onClick={toggleDarkMode}>
+                <i className={darkMode ? "fas fa-moon" : "fas fa-sun"}></i> {darkMode ? "Dark" : "Light"}
               </button>
-              <button
-                className="btn btn-outline-danger"
-                onClick={handleLogout}
-                style={{ minWidth: "100px" }}
-              >
-                <i className="fas fa-sign-out-alt"></i> Logout
-              </button>
-            </>
-          ) : (
-            <>
-              <Link className="btn btn-primary" to="/login" style={{ minWidth: "80px" }}>
-                Login
-              </Link>
-              <Link className="btn btn-outline-primary" to="/register" style={{ minWidth: "100px" }}>
-                Register
-              </Link>
-            </>
-          )}
+            </li>
+
+            {isLoggedIn ? (
+              <>
+                <li className="nav-item d-none d-lg-block">
+                  <Link className="btn btn-success" to="/create-post">
+                    <i className="fas fa-plus-circle"></i> Post
+                  </Link>
+                </li>
+                <li className="nav-item d-none d-lg-block">
+                  <button className="btn btn-outline-primary" onClick={handleViewProfile}>
+                    <i className="fas fa-user-circle"></i> Profile
+                  </button>
+                </li>
+                <li className="nav-item">
+                  <button className="btn btn-outline-danger btn-responsive" onClick={handleLogout}>
+                    <i className="fas fa-sign-out-alt"></i> Logout
+                  </button>
+                </li>
+              </>
+            ) : (
+              <>
+                <li className="nav-item">
+                  <Link className="btn btn-primary btn-responsive" to="/login">Login</Link>
+                </li>
+                <li className="nav-item">
+                  <Link className="btn btn-outline-primary btn-responsive" to="/register">Register</Link>
+                </li>
+              </>
+            )}
+          </ul>
         </div>
       </div>
     </nav>

@@ -530,6 +530,52 @@ const getAIPosts = async (req, res) => {
 };
 
 /**
+ * Get similar posts to a given post id based on overlapping keywords in content.text
+ */
+const getSimilarPosts = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const db = client.db('AIverse');
+
+        // Fetch the reference post
+        const basePost = await db.collection('posts').findOne({ _id: new ObjectId(id) });
+        if (!basePost) {
+            return res.status(404).json({ message: 'Post not found' });
+        }
+
+        const text = basePost?.content?.text || '';
+        // Extract simple keywords (length >= 4) and dedupe
+        const keywords = Array.from(new Set(
+            text
+                .toLowerCase()
+                .replace(/[^a-z0-9\s]/g, ' ')
+                .split(/\s+/)
+                .filter(w => w && w.length >= 4)
+        )).slice(0, 8);
+
+        const orClauses = keywords.map(kw => ({ 'content.text': { $regex: kw, $options: 'i' } }));
+
+        // Fallback: if no keywords, just return recent posts excluding the same one
+        const query = {
+            _id: { $ne: new ObjectId(id) },
+            isDeleted: false,
+            ...(orClauses.length ? { $or: orClauses } : {})
+        };
+
+        const similar = await db.collection('posts')
+            .find(query)
+            .sort({ createdAt: -1 })
+            .limit(10)
+            .toArray();
+
+        res.status(200).json(similar);
+    } catch (error) {
+        console.error('Error fetching similar posts:', error);
+        res.status(500).json({ error: 'Failed to fetch similar posts' });
+    }
+};
+
+/**
  * Add a reply to a specific comment on a post
  */
 const addReply = async (req, res) => {
@@ -589,5 +635,6 @@ module.exports = {
     generateAIPost, 
     getAIPosts,
     getPostsByUser,
-    addReply
+    addReply,
+    getSimilarPosts
 };

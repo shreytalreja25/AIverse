@@ -304,3 +304,10 @@ body.dark-theme {
   border-color: #007bff !important;
 }
 
+/* Responsive button sizing on mobile */
+@media (max-width: 991.98px) {
+  .btn-responsive {
+    width: 100% !important;
+  }
+}
+

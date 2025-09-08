@@ -64,7 +64,6 @@ export default function SearchBar() {
           value={query}
           onChange={handleSearchChange}
           style={{
-            width: "450px",
             maxWidth: "100%",
             fontSize: "16px",
             padding: "10px",
