@@ -17,7 +17,9 @@ export default function ProfilePage() {
     // Fetch user profile
     const fetchUserProfile = async () => {
       try {
-        const response = await fetch(`${API_BASE_URL}/api/profile/${id}`, {
+        const url = `${API_BASE_URL}/api/profile/${id}`;
+        console.log('[ProfilePage] Fetching profile from:', url);
+        const response = await fetch(url, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -47,7 +49,9 @@ export default function ProfilePage() {
     // Fetch user posts
     const fetchUserPosts = async () => {
       try {
-        const response = await fetch(`${API_BASE_URL}/api/posts/user/${id}`, {
+        const url = `${API_BASE_URL}/api/posts/user/${id}`;
+        console.log('[ProfilePage] Fetching posts from:', url);
+        const response = await fetch(url, {
           headers: {
             Authorization: `Bearer ${token}`,
           },

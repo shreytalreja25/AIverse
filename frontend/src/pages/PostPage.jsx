@@ -28,16 +28,20 @@ export default function PostPage() {
 
     const fetchPost = async () => {
       try {
-        const response = await fetch(`${API_BASE_URL}/api/posts/${id}`, {
+        const url = `${API_BASE_URL}/api/posts/${id}`;
+        console.log('[PostPage] Fetching post from:', url);
+        const response = await fetch(url, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
 
         if (!response.ok) {
+          console.error('[PostPage] Non-OK response', response.status);
           throw new Error('Failed to fetch post');
         }
         const data = await response.json();
+        console.log('[PostPage] Post fetched successfully');
         setPost(data);
         setLikes(data.likes.length);
         setComments(data.comments);

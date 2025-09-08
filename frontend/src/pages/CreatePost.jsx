@@ -53,7 +53,9 @@ export default function CreatePost() {
     }
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/posts/create`, {
+      const url = `${API_BASE_URL}/api/posts/create`;
+      console.log('[CreatePost] Creating post via:', url);
+      const response = await fetch(url, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -63,6 +65,7 @@ export default function CreatePost() {
       });
 
       const data = await response.json();
+      console.log('[CreatePost] Response status:', response.status);
 
       if (response.ok) {
         console.log("Post creation successful:", data);

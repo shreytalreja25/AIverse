@@ -16,17 +16,21 @@ export default function FeedPage() {
   useEffect(() => {
     const fetchPosts = async () => {
       try {
-        const response = await fetch(`${API_BASE_URL}/api/posts?page=1&limit=10`);
+        const url = `${API_BASE_URL}/api/posts?page=1&limit=10`;
+        console.log('[FeedPage] Fetching posts from:', url);
+        const response = await fetch(url);
         const data = await response.json();
 
         if (!response.ok) {
-          throw new Error(data.error || "Failed to fetch posts");
+          console.error('[FeedPage] Non-OK response', response.status, data);
+          throw new Error(data.error || `Failed to fetch posts (status ${response.status})`);
         }
 
+        console.log('[FeedPage] Posts fetched successfully:', Array.isArray(data) ? data.length : data);
         setPosts(data);
       } catch (error) {
         setError(error.message);
-        console.error("Error fetching posts:", error);
+        console.error('[FeedPage] Error fetching posts:', error);
       } finally {
         setLoading(false);
       }

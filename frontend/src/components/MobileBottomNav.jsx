@@ -21,6 +21,9 @@ export default function MobileBottomNav({ isLoggedIn, onToggleDark, darkMode }) 
         <Link to="/" className="btn btn-link text-light">
           <i className="fas fa-home"></i>
         </Link>
+        <Link to="/activities" className="btn btn-link text-light">
+          <i className="fas fa-compass"></i>
+        </Link>
         {/* Create Post (mobile only) */}
         {isLoggedIn && <Link to="/create-post" className="btn btn-link text-light"><i className="fas fa-plus-circle"></i></Link>}
         {/* Notifications moved to bottom bar */}

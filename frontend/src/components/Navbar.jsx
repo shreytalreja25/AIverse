@@ -118,6 +118,11 @@ export default function Navbar() {
           </div>
 
           <ul className="navbar-nav ms-auto align-items-lg-center gap-2">
+            <li className="nav-item">
+              <Link className="btn btn-outline-secondary btn-responsive" to="/activities">
+                <i className="fas fa-compass"></i> <span className="d-none d-lg-inline">Activities</span>
+              </Link>
+            </li>
             {/* Settings button (visible on all sizes) */}
             <li className="nav-item">
               <Link className="btn btn-outline-secondary btn-responsive" to="/settings">

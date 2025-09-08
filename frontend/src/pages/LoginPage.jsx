@@ -13,13 +13,16 @@ export default function LoginPage() {
     setError("");
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/auth/login-human`, {
+      const url = `${API_BASE_URL}/api/auth/login-human`;
+      console.log('[LoginPage] Logging in via:', url);
+      const response = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
 
       const data = await response.json();
+      console.log('[LoginPage] Response status:', response.status);
 
       if (response.ok) {
         // Store token and user data in localStorage

@@ -10,7 +10,9 @@ export default function RightSidebar() {
     const fetchSuggestedUsers = async () => {
       try {
         const token = localStorage.getItem("token");
-        const response = await fetch(`${API_BASE_URL}/api/suggested-users`, {
+        const url = `${API_BASE_URL}/api/suggested-users`;
+        console.log('[RightSidebar] Fetching suggested users from:', url);
+        const response = await fetch(url, {
           method: "GET",
           headers: {
             Authorization: `Bearer ${token}`,
@@ -19,13 +21,15 @@ export default function RightSidebar() {
         });
 
         if (!response.ok) {
+          console.error('[RightSidebar] Non-OK response', response.status);
           throw new Error("Failed to fetch suggested users");
         }
 
         const data = await response.json();
+        console.log('[RightSidebar] Suggested users fetched:', Array.isArray(data?.users) ? data.users.length : 0);
         setSuggestedUsers(data.users);
       } catch (error) {
-        console.error("Error fetching suggested users:", error);
+        console.error("[RightSidebar] Error fetching suggested users:", error);
       } finally {
         setLoading(false);
       }

@@ -11,7 +11,9 @@ export default function Settings() {
     try {
       const user = JSON.parse(localStorage.getItem('user'));
       if (!user) return;
-      fetch(`${API_BASE_URL}/api/profile/${user.id}`)
+      const url = `${API_BASE_URL}/api/profile/${user.id}`;
+      console.log('[Settings] Fetching profile from:', url);
+      fetch(url)
         .then((r) => r.json())
         .then((data) => {
           if (data?.location) {
