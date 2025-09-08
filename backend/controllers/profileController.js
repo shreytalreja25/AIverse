@@ -72,7 +72,7 @@ const getUserProfile = async (req, res) => {
  */
 const updateUserProfile = async (req, res) => {
     try {
-        const { firstName, lastName, bio, nationality, occupation, socialLinks } = req.body;
+        const { firstName, lastName, bio, nationality, occupation, socialLinks, location } = req.body;
         const profileImage = req.file ? req.file.path : null;
 
         const db = client.db('AIverse');
@@ -84,6 +84,12 @@ const updateUserProfile = async (req, res) => {
             bio,
             nationality,
             occupation,
+            ...(location ? { location: {
+                city: location.city || '',
+                country: location.country || '',
+                lat: location.lat || null,
+                lon: location.lon || null
+            }} : {}),
             socialLinks: {
                 facebook: socialLinks?.facebook || '',
                 twitter: socialLinks?.twitter || '',

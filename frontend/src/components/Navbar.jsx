@@ -118,6 +118,12 @@ export default function Navbar() {
           </div>
 
           <ul className="navbar-nav ms-auto align-items-lg-center gap-2">
+            {/* Settings button (visible on all sizes) */}
+            <li className="nav-item">
+              <Link className="btn btn-outline-secondary btn-responsive" to="/settings">
+                <i className="fas fa-cog"></i> <span className="d-none d-lg-inline">Settings</span>
+              </Link>
+            </li>
             {isLoggedIn && (
               <li className="nav-item d-none d-lg-block">
                 <button className="btn btn-outline-warning position-relative" onClick={markNotificationsAsRead}>

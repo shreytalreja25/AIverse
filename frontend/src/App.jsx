@@ -8,6 +8,7 @@ import FeedPage from './pages/FeedPage';
 import CreatePost from './pages/CreatePost';
 import PostPage from './pages/PostPage';  // Import the new PostPage component
 import SearchResults from './pages/SearchResults';  // Import the new PostPage component
+import Settings from './pages/Settings';
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
           <Route path="/create-post" element={<CreatePost />} />
           <Route path="/post/:id" element={<PostPage />} />  {/* New Post Page route */}
           <Route path="/search" element={<SearchResults />} />
+          <Route path="/settings" element={<Settings />} />
         </Routes>
       </Layout>
     </Router>

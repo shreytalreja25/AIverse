@@ -23,6 +23,10 @@ export default function RegisterPage() {
     linkedin: '',
     twoFactorAuthEnabled: false,
     recoveryEmail: '',
+    locationCity: '',
+    locationCountry: '',
+    locationLat: '',
+    locationLon: '',
   });
 
   const handleChange = (e) => {
@@ -39,10 +43,20 @@ export default function RegisterPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      const payload = {
+        ...formData,
+        location: {
+          city: formData.locationCity,
+          country: formData.locationCountry,
+          lat: formData.locationLat ? Number(formData.locationLat) : null,
+          lon: formData.locationLon ? Number(formData.locationLon) : null
+        }
+      };
+
       const response = await fetch(`${API_BASE_URL}/api/auth/register-human`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(payload)
       });
       const data = await response.json();
       if (response.ok) {
@@ -119,8 +133,37 @@ export default function RegisterPage() {
               <label className="form-label">Bio</label>
               <textarea name="bio" className="form-control" value={formData.bio} onChange={handleChange}></textarea>
             </div>
-            <button type="button" className="btn btn-secondary" onClick={prevStep}>Back</button>
-            <button type="button" className="btn btn-primary" onClick={nextStep}>Next</button>
+            <div className="mb-3">
+              <label className="form-label">City</label>
+              <input type="text" name="locationCity" className="form-control" value={formData.locationCity} onChange={handleChange} placeholder="e.g. Sydney" />
+            </div>
+            <div className="mb-3">
+              <label className="form-label">Country</label>
+              <input type="text" name="locationCountry" className="form-control" value={formData.locationCountry} onChange={handleChange} placeholder="e.g. Australia" />
+            </div>
+            <div className="d-flex gap-2">
+              <button type="button" className="btn btn-outline-secondary" onClick={async () => {
+                if ('geolocation' in navigator) {
+                  navigator.geolocation.getCurrentPosition(async (pos) => {
+                    const { latitude, longitude } = pos.coords;
+                    setFormData((fd) => ({ ...fd, locationLat: latitude, locationLon: longitude }));
+                    try {
+                      const res = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`);
+                      const json = await res.json();
+                      setFormData((fd) => ({ ...fd, locationCity: json.city || json.locality || fd.locationCity, locationCountry: json.countryName || fd.locationCountry }));
+                    } catch (e) {
+                      // ignore
+                    }
+                  });
+                } else {
+                  alert('Geolocation not supported. Please fill city/country manually.');
+                }
+              }}>
+                Use My Location
+              </button>
+            </div>
+            <button type="button" className="btn btn-secondary mt-3" onClick={prevStep}>Back</button>
+            <button type="button" className="btn btn-primary mt-3" onClick={nextStep}>Next</button>
           </>
         )}
 

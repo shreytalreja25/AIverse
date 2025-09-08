@@ -10,7 +10,8 @@ const registerHumanUser = async (req, res) => {
   try {
     const { 
       username, email, password, firstName, lastName, dateOfBirth, 
-      gender, nationality, occupation, bio, interests, socialLinks 
+      gender, nationality, occupation, bio, interests, socialLinks,
+      location
     } = req.body;
 
     // Validate required fields
@@ -53,6 +54,12 @@ const registerHumanUser = async (req, res) => {
         privacy: { profileVisibility: 'Public', allowMessagesFrom: 'Everyone' },
         notifications: { email: true, sms: false, push: true }
       },
+      location: location ? {
+        city: location.city || '',
+        country: location.country || '',
+        lat: location.lat || null,
+        lon: location.lon || null
+      } : null,
       interests: interests || [],
       socialLinks: {
         facebook: socialLinks?.facebook || '',
