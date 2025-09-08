@@ -1,8 +1,60 @@
 import { useEffect, useMemo, useState } from "react";
+import styled, { keyframes } from "styled-components";
 import API_BASE_URL from "../utils/config";
 import { generateActivities } from "../services/activities/geminiClient";
 import ActivitiesList from "../components/activities/ActivitiesList";
 import ActivitiesMap from "../components/activities/ActivitiesMap";
+
+// Animated background (module scope to avoid styled-components warnings)
+const fall = keyframes`
+  0% { transform: translateY(-20px) translateX(0) rotate(0deg); opacity: 0; }
+  10% { opacity: 0.8; }
+  100% { transform: translateY(120vh) translateX(20px) rotate(30deg); opacity: 0; }
+`;
+const twinkle = keyframes`
+  0% { opacity: 0.2; transform: scale(1); }
+  50% { opacity: 0.7; transform: scale(1.15); }
+  100% { opacity: 0.2; transform: scale(1); }
+`;
+
+const AnimationLayer = styled.div`
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  z-index: 0;
+`;
+
+const Particle = styled.span`
+  position: absolute;
+  top: -20px;
+  left: ${({ $left }) => $left}%;
+  animation: ${fall} ${({ $dur }) => $dur}s linear ${({ $delay }) => $delay}s infinite;
+  filter: drop-shadow(0 2px 2px rgba(0,0,0,0.2));
+`;
+
+const NightLayer = styled.div`
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+`;
+
+const Star = styled.span`
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  background: rgba(255,255,255,0.9);
+  border-radius: 50%;
+  top: ${({ $top }) => $top}%;
+  left: ${({ $left }) => $left}%;
+  animation: ${twinkle} ${({ $dur }) => $dur}s ease-in-out ${({ $delay }) => $delay}s infinite;
+`;
+
+const Container = styled.div`
+  position: relative;
+  z-index: 1;
+`;
 
 export default function Activities() {
   const [city, setCity] = useState("");
@@ -66,9 +118,71 @@ export default function Activities() {
       } catch {}
     });
   };
+  // Background visuals adapted from clock app
+  const fall = keyframes`
+    0% { transform: translateY(-20px) translateX(0) rotate(0deg); opacity: 0; }
+    10% { opacity: 0.8; }
+    100% { transform: translateY(120vh) translateX(20px) rotate(30deg); opacity: 0; }
+  `;
+  const twinkle = keyframes`
+    0% { opacity: 0.2; transform: scale(1); }
+    50% { opacity: 0.7; transform: scale(1.15); }
+    100% { opacity: 0.2; transform: scale(1); }
+  `;
+
+  const AnimationLayer = styled.div`
+    pointer-events: none;
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    z-index: 0;
+  `;
+
+  const Particle = styled.span`
+    position: absolute;
+    top: -20px;
+    left: ${({ $left }) => $left}%;
+    animation: ${fall} ${({ $dur }) => $dur}s linear ${({ $delay }) => $delay}s infinite;
+    filter: drop-shadow(0 2px 2px rgba(0,0,0,0.2));
+  `;
+
+  const NightLayer = styled.div`
+    pointer-events: none;
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+  `;
+
+  const Star = styled.span`
+    position: absolute;
+    width: 2px;
+    height: 2px;
+    background: rgba(255,255,255,0.9);
+    border-radius: 50%;
+    top: ${({ $top }) => $top}%;
+    left: ${({ $left }) => $left}%;
+    animation: ${twinkle} ${({ $dur }) => $dur}s ease-in-out ${({ $delay }) => $delay}s infinite;
+  `;
+
+  const Container = styled.div`
+    position: relative;
+    z-index: 1;
+  `;
 
   return (
-    <div className="container my-4">
+    <Container className="container my-4">
+      <AnimationLayer>
+        {["☀️","☁️","🌧️","❄️","⛈️"][new Date().getSeconds() % 5] && (
+          [...Array(8)].map((_, j) => (
+            <Particle key={`p-${j}`} $left={(j * 12) % 100} $dur={9 + j} $delay={j * 0.6}>✨</Particle>
+          ))
+        )}
+      </AnimationLayer>
+      <NightLayer>
+        {[...Array(30)].map((_, i) => (
+          <Star key={`s-${i}`} $top={(i * 7) % 100} $left={(i * 13) % 100} $dur={3 + (i % 5)} $delay={(i % 10) * 0.2} />
+        ))}
+      </NightLayer>
       <div className="d-flex flex-wrap align-items-end gap-2 mb-3">
         <div>
           <label className="form-label mb-1">City</label>
@@ -95,8 +209,7 @@ export default function Activities() {
 
       {view === "list" && <ActivitiesList items={items} city={city} country={country} onRefresh={fetchActivities} />}
       {view === "map" && <ActivitiesMap items={items} city={city} country={country} />}
-    </div>
-  );
-}
-
+      </Container>
+    );
+  }
 

@@ -12,12 +12,15 @@
   "dependencies": {
     "@fortawesome/fontawesome-free": "*",
     "@google/generative-ai": "*",
+    "axios": "*",
     "bootstrap": "*",
+    "framer-motion": "*",
     "react": "*",
     "react-bootstrap": "*",
     "react-dom": "*",
     "react-icons": "*",
-    "react-router-dom": "*"
+    "react-router-dom": "*",
+    "styled-components": "*"
   },
   "devDependencies": {
     "@eslint/js": "*",

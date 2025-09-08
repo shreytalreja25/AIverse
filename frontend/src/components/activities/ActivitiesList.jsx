@@ -1,7 +1,28 @@
 import { useState } from "react";
+import { useNotify } from "../Notify.jsx";
+import styled, { keyframes } from "styled-components";
+import { motion } from "framer-motion";
+
+const fadeUp = keyframes`
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+`;
+
+const Card = styled(motion.div)`
+  background-color: ${({ theme }) => theme.body === "#121212" ? "#2c2c2c" : "#f9f9f9"};
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  animation: ${fadeUp} 320ms ease both;
+  position: relative;
+  min-height: 240px;
+`;
 
 export default function ActivitiesList({ items = [], city, country, onRefresh }) {
   const [feedback, setFeedback] = useState(null);
+  const { success } = useNotify();
 
   const openDirections = (place) => {
     const q = encodeURIComponent(`${place}, ${city}, ${country}`);
@@ -23,7 +44,7 @@ export default function ActivitiesList({ items = [], city, country, onRefresh })
         await navigator.share({ title: it.title, text: it.description, url });
       } else {
         await navigator.clipboard.writeText(url);
-        alert("Link copied to clipboard");
+        success("Link copied to clipboard");
       }
     } catch {}
   };

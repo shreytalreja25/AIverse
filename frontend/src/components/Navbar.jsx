@@ -4,14 +4,15 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import logo from "../assets/AIverse-logo.png";
 import SearchBar from "./SearchBar";
 import API_BASE_URL from "../utils/config";
+import { useNotifications, NotificationsDropdown } from "./Notify.jsx";
 
 export default function Navbar() {
   const navigate = useNavigate();
+  const { unread, markAllRead } = useNotifications();
   const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem("token"));
   const [userId, setUserId] = useState("");
   const [darkMode, setDarkMode] = useState(false);
-  const [notifications, setNotifications] = useState([]);
-  const [unreadCount, setUnreadCount] = useState(0);
+  const [showDropdown, setShowDropdown] = useState(false);
 
   useEffect(() => {
     const handleStorageChange = () => {
@@ -34,23 +35,8 @@ export default function Navbar() {
   }, []);
 
   useEffect(() => {
-    if (isLoggedIn) fetchNotifications();
+    if (!isLoggedIn) setShowDropdown(false);
   }, [isLoggedIn]);
-
-  const fetchNotifications = async () => {
-    const mock = [
-      { id: 1, message: "John Doe liked your post", read: false },
-      { id: 2, message: "You have a new follower: Alice", read: false },
-      { id: 3, message: "Jane mentioned you in a comment", read: true }
-    ];
-    setNotifications(mock);
-    setUnreadCount(mock.filter((n) => !n.read).length);
-  };
-
-  const markNotificationsAsRead = () => {
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-    setUnreadCount(0);
-  };
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -68,7 +54,9 @@ export default function Navbar() {
 
   const handleViewProfile = async () => {
     if (!userId) {
-      alert("User ID not found. Please log in again.");
+      // Replaced alert with notification system
+      // Will be shown via toasts already; keep UX quiet here
+      console.warn("User ID not found. Please log in again.");
       return;
     }
     try {
@@ -77,7 +65,6 @@ export default function Navbar() {
       navigate(`/profile/${userId}`);
     } catch (err) {
       console.error("Error fetching profile:", err);
-      alert("Failed to load profile. Please try again later.");
     }
   };
 
@@ -130,15 +117,23 @@ export default function Navbar() {
               </Link>
             </li>
             {isLoggedIn && (
-              <li className="nav-item d-none d-lg-block">
-                <button className="btn btn-outline-warning position-relative" onClick={markNotificationsAsRead}>
+              <li className="nav-item d-none d-lg-block position-relative">
+                <button
+                  className="btn btn-outline-warning position-relative"
+                  onClick={() => { setShowDropdown((s) => !s); if (unread) markAllRead(); }}
+                >
                   <i className="fas fa-bell"></i>
-                  {unreadCount > 0 && (
+                  {unread > 0 && (
                     <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                      {unreadCount}
+                      {unread}
                     </span>
                   )}
                 </button>
+                {showDropdown && (
+                  <div className="position-absolute" style={{ right: 0 }}>
+                    <NotificationsDropdown />
+                  </div>
+                )}
               </li>
             )}
 
