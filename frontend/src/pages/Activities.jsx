@@ -5,6 +5,8 @@ import { generateActivities } from "../services/activities/geminiClient";
 import ActivitiesList from "../components/activities/ActivitiesList";
 import ActivitiesMap from "../components/activities/ActivitiesMap";
 import { useNotify } from "../components/Notify.jsx";
+import api from "../utils/apiClient";
+import Post from "../components/Post";
 
 // Animated background (module scope to avoid styled-components warnings)
 const fall = keyframes`
@@ -62,8 +64,10 @@ export default function Activities() {
   const [city, setCity] = useState("");
   const [country, setCountry] = useState("");
   const [items, setItems] = useState([]);
-  const [view, setView] = useState("list");
+  const [posts, setPosts] = useState([]);
+  const [view, setView] = useState("reels");
   const [loading, setLoading] = useState(false);
+  const [currentIndex, setCurrentIndex] = useState(0);
 
   // Load user's stored location
   useEffect(() => {
@@ -103,10 +107,25 @@ export default function Activities() {
     }
   };
 
+  const fetchPosts = async () => {
+    try {
+      const response = await api.get('/api/posts?limit=20');
+      // Sort by likes count and take top posts
+      const sortedPosts = response.data.sort((a, b) => (b.likes?.length || 0) - (a.likes?.length || 0));
+      setPosts(sortedPosts);
+    } catch (error) {
+      console.error('Error fetching posts:', error);
+    }
+  };
+
   useEffect(() => {
     if ((city || country) && items.length === 0) fetchActivities();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [city, country]);
+
+  useEffect(() => {
+    fetchPosts();
+  }, []);
 
   const useMyLocation = () => {
     if (!("geolocation" in navigator)) return warning("Geolocation not supported");
@@ -119,6 +138,34 @@ export default function Activities() {
         setCountry(json.countryName || "");
       } catch {}
     });
+  };
+
+  // Create mixed content for reels (activities + posts)
+  const mixedContent = useMemo(() => {
+    const content = [];
+    let activityIndex = 0;
+    let postIndex = 0;
+    
+    for (let i = 0; i < Math.max(items.length, posts.length) * 2; i++) {
+      if (i % 3 === 2 && posts[postIndex]) {
+        // Every 3rd item is a post
+        content.push({ type: 'post', data: posts[postIndex], id: `post-${postIndex}` });
+        postIndex++;
+      } else if (items[activityIndex]) {
+        // Activities
+        content.push({ type: 'activity', data: items[activityIndex], id: `activity-${activityIndex}` });
+        activityIndex++;
+      }
+    }
+    return content;
+  }, [items, posts]);
+
+  const handleNext = () => {
+    setCurrentIndex((prev) => (prev + 1) % mixedContent.length);
+  };
+
+  const handlePrev = () => {
+    setCurrentIndex((prev) => (prev - 1 + mixedContent.length) % mixedContent.length);
   };
   // Background visuals adapted from clock app
   const fall = keyframes`
@@ -202,12 +249,73 @@ export default function Activities() {
 
       <ul className="nav nav-tabs mb-3">
         <li className="nav-item">
+          <button className={`nav-link ${view === "reels" ? "active" : ""}`} onClick={() => setView("reels")}>Reels</button>
+        </li>
+        <li className="nav-item">
           <button className={`nav-link ${view === "list" ? "active" : ""}`} onClick={() => setView("list")}>List</button>
         </li>
         <li className="nav-item">
           <button className={`nav-link ${view === "map" ? "active" : ""}`} onClick={() => setView("map")}>Map (prototype)</button>
         </li>
       </ul>
+
+      {view === "reels" && (
+        <div className="position-relative" style={{ height: '80vh', overflow: 'hidden' }}>
+          {mixedContent.length > 0 && (
+            <div className="position-relative h-100">
+              <div className="position-absolute w-100 h-100 d-flex align-items-center justify-content-center">
+                {mixedContent[currentIndex]?.type === 'activity' ? (
+                  <div className="card w-100 h-100 d-flex flex-column justify-content-center align-items-center text-center p-4" style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white' }}>
+                    <h3 className="mb-3">{mixedContent[currentIndex].data.title}</h3>
+                    <p className="mb-3">{mixedContent[currentIndex].data.description}</p>
+                    <div className="d-flex gap-2">
+                      <button className="btn btn-light" onClick={() => window.open(mixedContent[currentIndex].data.directions, '_blank')}>
+                        <i className="fas fa-directions"></i> Directions
+                      </button>
+                      <button className="btn btn-outline-light" onClick={() => window.open(mixedContent[currentIndex].data.website, '_blank')}>
+                        <i className="fas fa-external-link-alt"></i> Website
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="w-100 h-100 d-flex align-items-center justify-content-center">
+                    <Post post={mixedContent[currentIndex].data} />
+                  </div>
+                )}
+              </div>
+              
+              {/* Navigation buttons */}
+              <button 
+                className="btn btn-light position-absolute" 
+                style={{ top: '50%', left: '10px', transform: 'translateY(-50%)' }}
+                onClick={handlePrev}
+              >
+                <i className="fas fa-chevron-left"></i>
+              </button>
+              <button 
+                className="btn btn-light position-absolute" 
+                style={{ top: '50%', right: '10px', transform: 'translateY(-50%)' }}
+                onClick={handleNext}
+              >
+                <i className="fas fa-chevron-right"></i>
+              </button>
+              
+              {/* Progress indicator */}
+              <div className="position-absolute bottom-0 start-50 translate-middle-x mb-3">
+                <div className="d-flex gap-1">
+                  {mixedContent.map((_, index) => (
+                    <div 
+                      key={index}
+                      className={`rounded-pill ${index === currentIndex ? 'bg-white' : 'bg-white-50'}`}
+                      style={{ width: '8px', height: '8px' }}
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {view === "list" && <ActivitiesList items={items} city={city} country={country} onRefresh={fetchActivities} />}
       {view === "map" && <ActivitiesMap items={items} city={city} country={country} />}

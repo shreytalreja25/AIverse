@@ -11,29 +11,38 @@ export default function MobileBottomNav({ isLoggedIn, onToggleDark, darkMode }) 
   } catch (_) {
     profilePath = "/login";
   }
+  
+  if (!isLoggedIn) return null;
+
   return (
-    <nav className="navbar fixed-bottom d-lg-none bg-dark border-top border-secondary">
+    <nav className="navbar fixed-bottom d-lg-none bg-white border-top">
       <div className="container-fluid d-flex justify-content-around py-2">
-        {/* Feed (mobile only) */}
-        <Link to="/feed" className="btn btn-link text-light">
-          <i className="fas fa-rss"></i>
+        {/* Home */}
+        <Link to="/feed" className="btn btn-link text-dark">
+          <i className="fas fa-home fs-5"></i>
         </Link>
-        <Link to="/" className="btn btn-link text-light">
-          <i className="fas fa-home"></i>
+        
+        {/* Search */}
+        <Link to="/search" className="btn btn-link text-dark">
+          <i className="fas fa-search fs-5"></i>
         </Link>
-        <Link to="/activities" className="btn btn-link text-light">
-          <i className="fas fa-compass"></i>
+        
+        {/* Create Post - Center with special styling */}
+        <Link to="/create-post" className="btn btn-link text-dark">
+          <div className="bg-primary rounded-circle d-flex align-items-center justify-content-center" style={{ width: '50px', height: '50px' }}>
+            <i className="fas fa-plus text-white fs-5"></i>
+          </div>
         </Link>
-        {/* Create Post (mobile only) */}
-        {isLoggedIn && <Link to="/create-post" className="btn btn-link text-light"><i className="fas fa-plus-circle"></i></Link>}
-        {/* Notifications moved to bottom bar */}
-        {isLoggedIn && (
-          <button className="btn btn-link text-light position-relative" onClick={() => window.dispatchEvent(new Event('openNotifications'))}>
-            <i className="fas fa-bell"></i>
-          </button>
-        )}
-        {/* Profile (mobile only) */}
-        {isLoggedIn && <Link to={profilePath} className="btn btn-link text-light"><i className="fas fa-user"></i></Link>}
+        
+        {/* Activities */}
+        <Link to="/activities" className="btn btn-link text-dark">
+          <i className="fas fa-play-circle fs-5"></i>
+        </Link>
+        
+        {/* Profile */}
+        <Link to={profilePath} className="btn btn-link text-dark">
+          <i className="fas fa-user fs-5"></i>
+        </Link>
       </div>
     </nav>
   );

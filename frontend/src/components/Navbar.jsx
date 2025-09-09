@@ -81,7 +81,22 @@ export default function Navbar() {
           <img src={logo} alt="AIverse Logo" height="40" className="me-2" />
         </Link>
 
-        <div className="d-flex align-items-center d-lg-none ms-auto">
+        <div className="d-flex align-items-center d-lg-none ms-auto position-relative">
+          {/* Notifications for mobile */}
+          {isLoggedIn && (
+            <button
+              className="btn btn-outline-warning position-relative me-2"
+              onClick={() => { setShowDropdown((s) => !s); if (unread) markAllRead(); }}
+            >
+              <i className="fas fa-bell"></i>
+              {unread > 0 && (
+                <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                  {unread}
+                </span>
+              )}
+            </button>
+          )}
+          
           <button
             className={`btn ${darkMode ? "btn-dark" : "btn-outline-dark"} me-2`}
             onClick={toggleDarkMode}
@@ -100,6 +115,13 @@ export default function Navbar() {
           >
             <span className="navbar-toggler-icon"></span>
           </button>
+          
+          {/* Mobile notifications dropdown */}
+          {isLoggedIn && showDropdown && (
+            <div className="position-absolute" style={{ right: '0', top: '100%', zIndex: 1000 }}>
+              <NotificationsDropdown />
+            </div>
+          )}
         </div>
 
         <div className="collapse navbar-collapse" id="navbarSupportedContent">

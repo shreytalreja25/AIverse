@@ -102,12 +102,23 @@ export default function ProfilePage() {
                 <p className="text-light">Following</p>
               </div>
             </div>
-            <button
-              className={`btn ${isFollowing ? "btn-danger" : "btn-primary"} mt-3`}
-              onClick={handleFollowToggle}
-            >
-              {isFollowing ? "Unfollow" : "Follow"}
-            </button>
+            <div className="d-flex gap-2 mt-3">
+              <button
+                className={`btn ${isFollowing ? "btn-danger" : "btn-primary"}`}
+                onClick={handleFollowToggle}
+              >
+                {isFollowing ? "Unfollow" : "Follow"}
+              </button>
+              <button
+                className="btn btn-outline-success"
+                onClick={() => {
+                  // Prototype for messaging - show alert for now
+                  alert("Direct messaging feature coming soon! This will allow you to send private messages to this user.");
+                }}
+              >
+                <i className="fas fa-envelope"></i> DM
+              </button>
+            </div>
           </div>
         </div>
       </div>

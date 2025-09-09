@@ -15,7 +15,7 @@ export async function generateActivities({ city, country, weatherText, tempC, ti
 
   const genAI = new GoogleGenerativeAI(apiKey);
   // Align with clock app version for broader availability
-  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+  const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
   const prompt = `Return ONLY minified JSON with this exact shape:
   {"items":[{"title":"string","place":"string","description":"string"},{"title":"string","place":"string","description":"string"},{"title":"string","place":"string","description":"string"},{"title":"string","place":"string","description":"string"}]}
