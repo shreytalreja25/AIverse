@@ -1,16 +1,19 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../utils/apiClient"; // Axios client
+import { AuthLoading } from "../components/LoadingSpinner";
 
 export default function LoginPage() {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setError("");
+    setLoading(true);
 
     try {
       const { data } = await api.post('/api/auth/login-human', { email, password });
@@ -34,6 +37,8 @@ export default function LoginPage() {
     } catch (err) {
       const msg = err?.response?.data?.message || err?.message || "An error occurred. Please try again.";
       setError(msg);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -74,8 +79,12 @@ export default function LoginPage() {
                   required
                 />
               </div>
-              <button type="submit" className="btn btn-primary w-100">
-                Login
+              <button type="submit" className="btn btn-primary w-100" disabled={loading}>
+                {loading ? (
+                  <AuthLoading message="Signing you in..." showMessage={false} />
+                ) : (
+                  "Login"
+                )}
               </button>
             </form>
             <p className="mt-3">

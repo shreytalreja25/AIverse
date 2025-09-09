@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import profilePlaceholder from '../assets/user-profile.png';
 import { postsAPI } from '../services/apiService';
+import { PostLoading } from '../components/LoadingSpinner';
 import { useNotify } from "../components/Notify.jsx";
 import { getValidToken, clearAuth } from "../utils/auth.js";
 import { useDataFetch } from '../hooks/usePageRefresh';
@@ -107,7 +108,7 @@ export default function PostPage() {
     success('Post link copied to clipboard!');
   };
 
-  if (loading) return <p className="text-center">Loading post...</p>;
+  if (loading) return <PostLoading message="Loading post details..." />;
   if (error) return <p className="text-center text-danger">{error}</p>;
 
   return (

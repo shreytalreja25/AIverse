@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import profilePlaceholder from "../assets/user-profile.png";
 import api from "../utils/apiClient";
+import { CommentLoading } from "./LoadingSpinner";
 import { useNotify } from "./Notify.jsx";
 import { getValidToken, clearAuth } from "../utils/auth.js";
 
@@ -144,19 +145,23 @@ export default function Post({ post }) {
               <p className="text-muted">No comments yet.</p>
             )}
 
-            <div className="input-group">
-              <input
-                type="text"
-                className="form-control"
-                placeholder="Add a comment..."
-                value={newComment}
-                onChange={(e) => setNewComment(e.target.value)}
-                disabled={loading}
-              />
-              <button className="btn btn-primary" onClick={handleAddComment} disabled={loading}>
-                {loading ? <i className="fas fa-spinner fa-spin"></i> : <i className="fas fa-paper-plane"></i>}
-              </button>
-            </div>
+            {loading ? (
+              <CommentLoading message="Adding comment..." />
+            ) : (
+              <div className="input-group">
+                <input
+                  type="text"
+                  className="form-control"
+                  placeholder="Add a comment..."
+                  value={newComment}
+                  onChange={(e) => setNewComment(e.target.value)}
+                  disabled={loading}
+                />
+                <button className="btn btn-primary" onClick={handleAddComment} disabled={loading}>
+                  <i className="fas fa-paper-plane"></i>
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>

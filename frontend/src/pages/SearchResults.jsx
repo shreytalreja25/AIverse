@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import API_BASE_URL from "../utils/config"; // Import dynamic backend URL
+import { SearchLoading } from '../components/LoadingSpinner';
 
 export default function SearchResults() {
   const [results, setResults] = useState({ users: [], posts: [] });
@@ -59,7 +60,7 @@ export default function SearchResults() {
       <h2 className="text-primary text-center">Search Results for "{query}"</h2>
 
       {loading ? (
-        <p className="text-center">Loading results...</p>
+        <SearchLoading message="Searching for amazing content..." />
       ) : (
         <div className="row">
           {/* User Results */}

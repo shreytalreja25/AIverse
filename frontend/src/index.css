@@ -325,3 +325,207 @@ body.dark-theme {
   }
 }
 
+/* ===== LOADING ANIMATIONS ===== */
+
+/* Bounce animation for emojis */
+@keyframes bounce {
+  0%, 20%, 50%, 80%, 100% {
+    transform: translateY(0) scale(1);
+  }
+  40% {
+    transform: translateY(-20px) scale(1.1);
+  }
+  60% {
+    transform: translateY(-10px) scale(1.05);
+  }
+}
+
+/* Orbit animation for surrounding dots */
+@keyframes orbit {
+  0% {
+    transform: rotate(0deg) translateX(40px) rotate(0deg);
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+  100% {
+    transform: rotate(360deg) translateX(40px) rotate(-360deg);
+    opacity: 1;
+  }
+}
+
+/* Loading dots animation */
+@keyframes loadingDots {
+  0%, 20% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+  80%, 100% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+}
+
+/* Pulse animation for subtle effects */
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Floating animation */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+/* Spin animation for custom spinners */
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Emoji bounce class */
+.emoji-bounce {
+  animation: bounce 1s infinite;
+}
+
+/* Orbit dots container */
+.orbit-dots {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100px;
+  height: 100px;
+}
+
+.orbit-dot {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 0.8rem;
+  animation: orbit 3s linear infinite;
+  animation-delay: var(--delay);
+}
+
+/* Loading dots */
+.loading-dots span {
+  display: inline-block;
+  animation: loadingDots 1.4s infinite;
+  animation-delay: calc(var(--i) * 0.2s);
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #007bff;
+}
+
+.loading-dots span:nth-child(1) { --i: 0; }
+.loading-dots span:nth-child(2) { --i: 1; }
+.loading-dots span:nth-child(3) { --i: 2; }
+
+/* Custom spinner styles */
+.custom-spinner {
+  width: 3rem;
+  height: 3rem;
+  border: 0.3rem solid rgba(0, 123, 255, 0.1);
+  border-top: 0.3rem solid #007bff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+/* Skeleton loading for content */
+.skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Dark mode skeleton */
+.dark .skeleton {
+  background: linear-gradient(90deg, #333 25%, #444 50%, #333 75%);
+  background-size: 200% 100%;
+}
+
+/* Loading card skeleton */
+.skeleton-card {
+  background: #f8f9fa;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.dark .skeleton-card {
+  background: #343a40;
+}
+
+.skeleton-line {
+  height: 1rem;
+  margin-bottom: 0.5rem;
+  border-radius: 0.25rem;
+}
+
+.skeleton-avatar {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  margin-bottom: 0.5rem;
+}
+
+/* Pulse effect for interactive elements */
+.pulse-effect {
+  animation: pulse 2s infinite;
+}
+
+/* Floating effect for special elements */
+.float-effect {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* Responsive loading animations */
+@media (max-width: 768px) {
+  .orbit-dots {
+    width: 80px;
+    height: 80px;
+  }
+  
+  .orbit-dot {
+    font-size: 0.6rem;
+  }
+  
+  .emoji-bounce {
+    font-size: 2rem !important;
+  }
+}
+

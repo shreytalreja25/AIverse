@@ -5,6 +5,8 @@ import profilePlaceholder from "../assets/user-profile.png";
 import Stories from "../components/Stories";
 import RightSidebar from "../components/RightSidebar";
 import NavigationSidebar from "../components/NavigationSidebar";
+import { PostLoading } from "../components/LoadingSpinner";
+import { SkeletonLoader, PostSkeleton } from "../components/SkeletonLoader";
 import { postsAPI } from "../services/apiService";
 import { useNotify } from "../components/Notify.jsx";
 import { getValidToken, clearAuth } from "../utils/auth.js";
@@ -78,7 +80,7 @@ export default function FeedPage() {
           </div>
 
           {loading ? (
-            <p className="text-center">Loading posts...</p>
+            <SkeletonLoader count={3} component={PostSkeleton} />
           ) : error ? (
             <p className="text-center text-danger">{error}</p>
           ) : posts.length === 0 ? (

@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import profilePlaceholder from "../assets/user-profile.png";
 import { usersAPI, postsAPI } from "../services/apiService";
+import { ProfileLoading } from "../components/LoadingSpinner";
+import { ProfileSkeleton } from "../components/SkeletonLoader";
 import { useNotify } from "../components/Notify.jsx";
 import { getValidToken, clearAuth } from "../utils/auth.js";
 import { useDataFetch } from "../hooks/usePageRefresh";
@@ -74,7 +76,7 @@ export default function ProfilePage() {
     }
   };
 
-  if (loading) return <p className="text-center">Loading profile...</p>;
+  if (loading) return <ProfileSkeleton />;
   if (error) return <p className="text-center text-danger">{error.message}</p>;
   if (!user) return <p className="text-center text-danger">User not found.</p>;
 

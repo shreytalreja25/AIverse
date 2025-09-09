@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from "../utils/apiClient";
+import { AuthLoading } from "../components/LoadingSpinner";
 import { useNotify } from "../components/Notify.jsx";
 
 export default function RegisterPage() {
   const navigate = useNavigate();
   const { error: notifyError, success, warning } = useNotify();
   const [step, setStep] = useState(1);
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     username: '',
     email: '',
@@ -44,6 +46,7 @@ export default function RegisterPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
     try {
       const payload = {
         ...formData,
@@ -61,6 +64,8 @@ export default function RegisterPage() {
     } catch (error) {
       const msg = error?.response?.data?.message || 'Registration failed, please try again.';
       notifyError(msg);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -173,8 +178,14 @@ export default function RegisterPage() {
             <input type="text" name="twitter" placeholder="Twitter" className="form-control mb-2" value={formData.twitter} onChange={handleChange} />
             <input type="text" name="instagram" placeholder="Instagram" className="form-control mb-2" value={formData.instagram} onChange={handleChange} />
             <input type="text" name="linkedin" placeholder="LinkedIn" className="form-control mb-2" value={formData.linkedin} onChange={handleChange} />
-            <button type="button" className="btn btn-secondary" onClick={prevStep}>Back</button>
-            <button type="submit" className="btn btn-success">Register</button>
+            <button type="button" className="btn btn-secondary" onClick={prevStep} disabled={loading}>Back</button>
+            <button type="submit" className="btn btn-success" disabled={loading}>
+              {loading ? (
+                <AuthLoading message="Creating your account..." showMessage={false} />
+              ) : (
+                "Register"
+              )}
+            </button>
           </>
         )}
       </form>
