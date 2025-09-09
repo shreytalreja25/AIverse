@@ -254,6 +254,20 @@ body.dark-theme {
   border: 1px solid #333 !important;
 }
 
+/* Dark mode for mobile bottom navigation */
+.dark-theme .navbar.fixed-bottom {
+  background-color: #2c2c2c !important;
+  border-top: 1px solid #444 !important;
+}
+
+.dark-theme .navbar.fixed-bottom .btn-link {
+  color: #ffffff !important;
+}
+
+.dark-theme .navbar.fixed-bottom .btn-link:hover {
+  color: #3399ff !important;
+}
+
 .dark-theme .form-control, 
 .dark-theme .form-select {
   background-color: #333 !important;

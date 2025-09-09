@@ -1,56 +1,61 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import profilePlaceholder from "../assets/user-profile.png";
-import api from "../utils/apiClient";
+import { usersAPI, postsAPI } from "../services/apiService";
 import { useNotify } from "../components/Notify.jsx";
 import { getValidToken, clearAuth } from "../utils/auth.js";
+import { useDataFetch } from "../hooks/usePageRefresh";
 
 export default function ProfilePage() {
   const { error: notifyError, warning, success } = useNotify();
   const { id } = useParams();
   const navigate = useNavigate();
-  const [user, setUser] = useState(null);
-  const [userPosts, setUserPosts] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [isFollowing, setIsFollowing] = useState(false);
 
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-
-    const fetchUserProfile = async () => {
-      try {
-        const { data } = await api.get(`/api/profile/${id}`);
-        setUser({ ...data, profileImage: data.profileImage || profilePlaceholder });
-        const loggedInUser = JSON.parse(localStorage.getItem("user"));
-        if (loggedInUser) {
-          setIsFollowing(data.followers.some((follower) => follower.userId === loggedInUser.id));
-        }
-      } catch (error) {
-        console.error("Error fetching profile:", error);
-      } finally {
-        setLoading(false);
+  const fetchUserProfile = async () => {
+    try {
+      const { data } = await usersAPI.getProfile(id);
+      const userData = { ...data, profileImage: data.profileImage || profilePlaceholder };
+      
+      const loggedInUser = JSON.parse(localStorage.getItem("user"));
+      if (loggedInUser) {
+        setIsFollowing(data.followers.some((follower) => follower.userId === loggedInUser.id));
       }
-    };
+      
+      return userData;
+    } catch (error) {
+      console.error("Error fetching profile:", error);
+      throw error;
+    }
+  };
 
-    const fetchUserPosts = async () => {
-      try {
-        const { data } = await api.get(`/api/posts/user/${id}`);
-        setUserPosts(data);
-      } catch (error) {
-        console.error("Error fetching user posts:", error);
-      }
-    };
+  const fetchUserPosts = async () => {
+    try {
+      const { data } = await postsAPI.getUserPosts(id);
+      return data;
+    } catch (error) {
+      console.error("Error fetching user posts:", error);
+      throw error;
+    }
+  };
 
-    fetchUserProfile();
-    fetchUserPosts();
-  }, [id]);
+  const { data: user, loading: userLoading, error: userError, refresh: refreshUser } = useDataFetch(fetchUserProfile, [id]);
+  const { data: userPosts, loading: postsLoading, error: postsError, refresh: refreshPosts } = useDataFetch(fetchUserPosts, [id]);
+
+  const loading = userLoading || postsLoading;
+  const error = userError || postsError;
 
   const handleFollowToggle = async () => {
     const token = getValidToken();
     if (!token) return warning("Please log in to follow users.");
 
     try {
-      await api.post(`/api/users/${id}/${isFollowing ? "unfollow" : "follow"}`);
+      if (isFollowing) {
+        await usersAPI.unfollowUser(id);
+      } else {
+        await usersAPI.followUser(id);
+      }
+      
       setIsFollowing(!isFollowing);
       setUser((prevState) => ({
         ...prevState,
@@ -70,10 +75,34 @@ export default function ProfilePage() {
   };
 
   if (loading) return <p className="text-center">Loading profile...</p>;
+  if (error) return <p className="text-center text-danger">{error.message}</p>;
   if (!user) return <p className="text-center text-danger">User not found.</p>;
 
   return (
     <div className="container my-5">
+      <div className="d-flex justify-content-between align-items-center mb-3">
+        <h3 className="fw-bold text-primary mb-0">Profile</h3>
+        <div className="btn-group" role="group">
+          <button 
+            className="btn btn-outline-primary btn-sm"
+            onClick={refreshUser}
+            disabled={userLoading}
+            title="Refresh Profile"
+          >
+            <i className={`fas fa-sync-alt ${userLoading ? 'fa-spin' : ''}`}></i>
+            {userLoading ? ' Refreshing...' : ' Refresh Profile'}
+          </button>
+          <button 
+            className="btn btn-outline-secondary btn-sm"
+            onClick={refreshPosts}
+            disabled={postsLoading}
+            title="Refresh Posts"
+          >
+            <i className={`fas fa-sync-alt ${postsLoading ? 'fa-spin' : ''}`}></i>
+            {postsLoading ? ' Refreshing...' : ' Refresh Posts'}
+          </button>
+        </div>
+      </div>
       <div className="card p-4 shadow-lg border-0 bg-dark text-light">
         <div className="row align-items-center">
           <div className="col-md-4 text-center">

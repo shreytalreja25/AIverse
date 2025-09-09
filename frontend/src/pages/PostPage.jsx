@@ -1,16 +1,14 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import profilePlaceholder from '../assets/user-profile.png';
-import API_BASE_URL from "../utils/config"; // Import dynamic backend URL
+import { postsAPI } from '../services/apiService';
 import { useNotify } from "../components/Notify.jsx";
 import { getValidToken, clearAuth } from "../utils/auth.js";
+import { useDataFetch } from '../hooks/usePageRefresh';
 
 export default function PostPage() {
   const { warning, error: notifyError, success } = useNotify();
   const { id } = useParams();
-  const [post, setPost] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState('');
   const [likes, setLikes] = useState(0);
@@ -18,108 +16,66 @@ export default function PostPage() {
   const [morePosts, setMorePosts] = useState([]);
   const [similarPosts, setSimilarPosts] = useState([]);
 
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    const userData = JSON.parse(localStorage.getItem('user')) || {};
-    const userId = userData.id;
+  const fetchPost = async () => {
+    try {
+      console.log('[PostPage] Fetching post with ID:', id);
+      const { data } = await postsAPI.getPost(id);
+      console.log('[PostPage] Post fetched successfully');
+      
+      const userData = JSON.parse(localStorage.getItem('user')) || {};
+      const userId = userData.id;
+      
+      setLikes(data.likes?.length || 0);
+      setComments(data.comments || []);
+      setLiked(data.likes?.some((like) => like.user === userId) || false);
 
-    if (!userId) {
-      setError('User ID not found');
-      setLoading(false);
-      return;
-    }
-
-    const fetchPost = async () => {
-      try {
-        const url = `${API_BASE_URL}/api/posts/${id}`;
-        console.log('[PostPage] Fetching post from:', url);
-        const response = await fetch(url, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        if (!response.ok) {
-          console.error('[PostPage] Non-OK response', response.status);
-          throw new Error('Failed to fetch post');
+      // Fetch additional data
+      if (userId) {
+        try {
+          const { data: moreData } = await postsAPI.getUserPosts(userId);
+          setMorePosts(moreData || []);
+        } catch (err) {
+          console.error('Error fetching more posts:', err);
         }
-        const data = await response.json();
-        console.log('[PostPage] Post fetched successfully');
-        setPost(data);
-        setLikes(data.likes.length);
-        setComments(data.comments);
-        setLiked(data.likes.some((like) => like.user === userId));
-
-        fetchMorePosts(userId);
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
       }
-    };
 
-    const fetchMorePosts = async (userId) => {
       try {
-        const response = await fetch(`${API_BASE_URL}/api/posts/user/${userId}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        if (response.ok) {
-          const data = await response.json();
-          setMorePosts(data);
-        }
-      } catch (err) {
-        console.error('Error fetching more posts:', err);
-      }
-    };
-
-    const fetchSimilarPosts = async () => {
-      try {
-        const response = await fetch(`${API_BASE_URL}/api/posts/similar/${id}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        if (response.ok) {
-          const data = await response.json();
-          setSimilarPosts(data);
-        }
+        const { data: similarData } = await postsAPI.getSimilarPosts(id);
+        setSimilarPosts(similarData || []);
       } catch (err) {
         console.error('Error fetching similar posts:', err);
       }
-    };
 
-    fetchPost();
-    fetchSimilarPosts();
-  }, [id]);
+      return data;
+    } catch (err) {
+      console.error('[PostPage] Error fetching post:', err);
+      throw new Error(err?.response?.data?.error || err.message || 'Failed to fetch post');
+    }
+  };
+
+  const { data: post, loading, error, refresh } = useDataFetch(fetchPost, [id]);
 
   const handleLike = async () => {
     const token = getValidToken();
     if (!token) return warning('You need to be logged in to like posts!');
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/posts/${id}/like`, {
-        method: liked ? 'DELETE' : 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (response.ok) {
-        setLiked(!liked);
-        setLikes((prevLikes) => (liked ? prevLikes - 1 : prevLikes + 1));
+      if (liked) {
+        await postsAPI.unlikePost(id);
       } else {
-        if (response.status === 401) {
-          notifyError('Session expired. Please log in again.');
-          clearAuth();
-          window.location.href = '/login';
-        } else {
-          notifyError('Failed to update like.');
-        }
+        await postsAPI.likePost(id);
       }
+      
+      setLiked(!liked);
+      setLikes((prevLikes) => (liked ? prevLikes - 1 : prevLikes + 1));
     } catch (error) {
+      if (error?.response?.status === 401) {
+        notifyError('Session expired. Please log in again.');
+        clearAuth();
+        window.location.href = '/login';
+      } else {
+        notifyError('Failed to update like.');
+      }
       console.error('Error updating like:', error);
     }
   };
@@ -130,28 +86,17 @@ export default function PostPage() {
       if (!token) return warning('You need to be logged in to comment!');
 
       try {
-        const response = await fetch(`${API_BASE_URL}/api/posts/${id}/comment`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ text: newComment }),
-        });
-
-        if (response.ok) {
-          setComments([...comments, { user: 'You', text: newComment }]);
-          setNewComment('');
-        } else {
-          if (response.status === 401) {
-            notifyError('Session expired. Please log in again.');
-            clearAuth();
-            window.location.href = '/login';
-          } else {
-            notifyError('Failed to add comment');
-          }
-        }
+        const { data } = await postsAPI.addComment(id, newComment);
+        setComments([...comments, data]);
+        setNewComment('');
       } catch (error) {
+        if (error?.response?.status === 401) {
+          notifyError('Session expired. Please log in again.');
+          clearAuth();
+          window.location.href = '/login';
+        } else {
+          notifyError('Failed to add comment');
+        }
         console.error('Error adding comment:', error);
       }
     }
@@ -170,6 +115,17 @@ export default function PostPage() {
       <div className="row">
         {/* Main Post Section */}
         <div className="col-lg-8">
+          <div className="d-flex justify-content-between align-items-center mb-3">
+            <h4 className="fw-bold text-primary mb-0">Post Details</h4>
+            <button 
+              className="btn btn-outline-primary btn-sm"
+              onClick={refresh}
+              disabled={loading}
+            >
+              <i className={`fas fa-sync-alt ${loading ? 'fa-spin' : ''}`}></i>
+              {loading ? ' Refreshing...' : ' Refresh'}
+            </button>
+          </div>
           <div className="card shadow-sm border-0 p-4">
             <div className="d-flex align-items-center mb-3">
               <img

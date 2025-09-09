@@ -7,7 +7,13 @@ import { getValidToken, clearAuth } from "../utils/auth.js";
 
 export default function Post({ post }) {
   const { warning, error: notifyError, success } = useNotify();
-  const [likes, setLikes] = useState(post.likes.length || 0);
+  
+  // Defensive programming - ensure post exists and has required properties
+  if (!post) {
+    return <div className="card mb-3"><div className="card-body">Post not available</div></div>;
+  }
+  
+  const [likes, setLikes] = useState(post.likes && Array.isArray(post.likes) ? post.likes.length : 0);
   const [liked, setLiked] = useState(post.liked || false);
   const [comments, setComments] = useState(post.comments || []);
   const [showComments, setShowComments] = useState(false);
@@ -16,7 +22,7 @@ export default function Post({ post }) {
 
   useEffect(() => {
     const currentUser = localStorage.getItem("user") ? JSON.parse(localStorage.getItem("user"))._id : null;
-    if (currentUser && post.likes.some((like) => like.user === currentUser)) {
+    if (currentUser && post.likes && Array.isArray(post.likes) && post.likes.some((like) => like.user === currentUser)) {
       setLiked(true);
     }
   }, [post.likes]);
@@ -25,14 +31,20 @@ export default function Post({ post }) {
     const token = getValidToken();
     if (!token) return warning("You need to be logged in to like posts!");
 
+    // Ensure we have a valid post ID
+    const postId = post.id || post._id;
+    if (!postId) {
+      return notifyError("Post ID not found. Please refresh the page.");
+    }
+
     setLiked(!liked);
     setLikes((prevLikes) => (liked ? prevLikes - 1 : prevLikes + 1));
 
     try {
       if (liked) {
-        await api.post(`/api/posts/${post.id}/unlike`);
+        await api.post(`/api/posts/${postId}/unlike`);
       } else {
-        await api.post(`/api/posts/${post.id}/like`);
+        await api.post(`/api/posts/${postId}/like`);
       }
     } catch (error) {
       if (error?.response?.status === 401) {
@@ -48,10 +60,15 @@ export default function Post({ post }) {
   const handleAddComment = async () => {
     if (newComment.trim() === "") return;
 
+    const postId = post.id || post._id;
+    if (!postId) {
+      return notifyError("Post ID not found. Please refresh the page.");
+    }
+
     setLoading(true);
 
     try {
-      const { data } = await api.post(`/api/posts/${post.id}/comment`, { text: newComment });
+      const { data } = await api.post(`/api/posts/${postId}/comment`, { text: newComment });
       setComments([...comments, data]);
       setNewComment("");
     } catch (error) {
@@ -67,7 +84,11 @@ export default function Post({ post }) {
   };
 
   const handleShare = () => {
-    navigator.clipboard.writeText(`${window.location.origin}/post/${post.id}`);
+    const postId = post.id || post._id;
+    if (!postId) {
+      return notifyError("Post ID not found. Please refresh the page.");
+    }
+    navigator.clipboard.writeText(`${window.location.origin}/post/${postId}`);
     success("Post link copied to clipboard!");
   };
 

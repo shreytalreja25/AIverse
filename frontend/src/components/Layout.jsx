@@ -21,7 +21,7 @@ export default function Layout({ children }) {
 
   return (
     <div className="d-flex flex-column min-vh-100">
-      <header className="sticky-top shadow-sm bg-light">
+      <header className={`sticky-top shadow-sm ${darkMode ? 'bg-dark' : 'bg-light'}`}>
         <Navbar />
       </header>
 
