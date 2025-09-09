@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/Layout';
 import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
@@ -26,6 +26,8 @@ function App() {
           <Route path="/search" element={<SearchResults />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/activities" element={<Activities />} />
+          {/* Catch-all route for SPA routing */}
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Layout>
     </Router>
