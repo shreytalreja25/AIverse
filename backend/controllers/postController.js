@@ -62,13 +62,62 @@ const getAllPosts = async (req, res) => {
                 $unwind: "$authorInfo" // Convert authorInfo array to object
             },
             {
+                $lookup: {
+                    from: 'users',
+                    localField: 'comments.user',
+                    foreignField: '_id',
+                    as: 'commenterInfo'
+                }
+            },
+            {
+                $addFields: {
+                    comments: {
+                        $map: {
+                            input: "$comments",
+                            as: "comment",
+                            in: {
+                                $mergeObjects: [
+                                    "$$comment",
+                                    {
+                                        commenterInfo: {
+                                            $arrayElemAt: [
+                                                {
+                                                    $filter: {
+                                                        input: "$commenterInfo",
+                                                        cond: { $eq: ["$$this._id", "$$comment.user"] }
+                                                    }
+                                                },
+                                                0
+                                            ]
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                }
+            },
+            {
                 $project: {
                     _id: 1,
                     "content.text": 1,
                     "content.image": 1,
                     aiGenerated: 1,
                     likes: 1,
-                    comments: 1,
+                    comments: {
+                        _id: 1,
+                        user: 1,
+                        text: 1,
+                        commentedAt: 1,
+                        replies: 1,
+                        commenterInfo: {
+                            _id: 1,
+                            username: 1,
+                            firstName: 1,
+                            lastName: 1,
+                            profileImage: 1
+                        }
+                    },
                     savedBy: 1,
                     createdAt: 1,
                     updatedAt: 1,
@@ -114,12 +163,61 @@ const getPostById = async (req, res) => {
                 $unwind: '$authorInfo'  // Flatten the author array
             },
             {
+                $lookup: {
+                    from: 'users',
+                    localField: 'comments.user',
+                    foreignField: '_id',
+                    as: 'commenterInfo'
+                }
+            },
+            {
+                $addFields: {
+                    comments: {
+                        $map: {
+                            input: "$comments",
+                            as: "comment",
+                            in: {
+                                $mergeObjects: [
+                                    "$$comment",
+                                    {
+                                        commenterInfo: {
+                                            $arrayElemAt: [
+                                                {
+                                                    $filter: {
+                                                        input: "$commenterInfo",
+                                                        cond: { $eq: ["$$this._id", "$$comment.user"] }
+                                                    }
+                                                },
+                                                0
+                                            ]
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                }
+            },
+            {
                 $project: {
                     _id: 1,
                     content: 1,
                     aiGenerated: 1,
                     likes: 1,
-                    comments: 1,
+                    comments: {
+                        _id: 1,
+                        user: 1,
+                        text: 1,
+                        commentedAt: 1,
+                        replies: 1,
+                        commenterInfo: {
+                            _id: 1,
+                            username: 1,
+                            firstName: 1,
+                            lastName: 1,
+                            profileImage: 1
+                        }
+                    },
                     savedBy: 1,
                     createdAt: 1,
                     updatedAt: 1,

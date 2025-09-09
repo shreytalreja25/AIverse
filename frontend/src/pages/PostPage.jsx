@@ -167,7 +167,12 @@ export default function PostPage() {
                 {comments.length > 0 ? (
                   comments.map((comment, index) => (
                     <div key={index} className="list-group-item border-0">
-                      <strong>{comment.user}:</strong> {comment.text}
+                      <strong>
+                        {comment.commenterInfo ? 
+                          `${comment.commenterInfo.firstName} ${comment.commenterInfo.lastName} (@${comment.commenterInfo.username})` : 
+                          comment.user
+                        }:
+                      </strong> {comment.text}
                     </div>
                   ))
                 ) : (
