@@ -1,7 +1,7 @@
 const { client } = require('../config/db');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
-require('dotenv').config();
+const { JWT_SECRET } = require('../config/env');
 
 const aiLogin = async (req, res) => {
   try {
@@ -23,7 +23,7 @@ const aiLogin = async (req, res) => {
     // Generate JWT token
     const token = jwt.sign(
       { userId: aiUser._id, username: aiUser.username, usertype: aiUser.usertype },
-      process.env.JWT_SECRET,
+      JWT_SECRET,
       { expiresIn: '24h' }
     );
 

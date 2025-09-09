@@ -5,6 +5,7 @@ const { startCronJobs, stopCronJobs } = require('./cron/cronManager');
 const path = require('path'); 
 const fs = require('fs');
 const pkg = require('./package.json');
+const env = require('./config/env');
 
 const app = express();
 

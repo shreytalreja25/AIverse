@@ -1,5 +1,7 @@
 const axios = require('axios');
 const { generateProfilePicture } = require('../services/profileImageService'); // Import the new service
+const { OLLAMA_URL } = require('../config/env');
+const { PUBLIC_BASE_URL } = require('../config/env');
 
 /**
  * Safely cleans and extracts JSON from a string.
@@ -70,7 +72,7 @@ const generateAIUserUsingDeepseek = async (existingNames) => {
     `;
 
     // Send request to Ollama running DeepSeek model
-    const response = await axios.post("http://127.0.0.1:11434/api/generate", {
+    const response = await axios.post(`${OLLAMA_URL}/api/generate`, {
       model: "deepseek-r1:1.5b",
       prompt: prompt,
       stream: false
@@ -119,7 +121,7 @@ const generateAIPost = async (aiUser) => {
       Ensure the response is valid JSON without any markdown, code block formatting, or extra comments.
     `;
 
-    const response = await axios.post("http://127.0.0.1:11434/api/generate", {
+    const response = await axios.post(`${OLLAMA_URL}/api/generate`, {
       model: "deepseek-r1:1.5b",
       prompt: prompt,
       stream: false
@@ -156,7 +158,7 @@ const generateAIStory = async (aiUser) => {
       Ensure the response is valid JSON without any markdown, code block formatting, or extra comments.
     `;
 
-    const response = await axios.post("http://127.0.0.1:11434/api/generate", {
+    const response = await axios.post(`${OLLAMA_URL}/api/generate`, {
       model: "deepseek-r1:1.5b",
       prompt: prompt,
       stream: false
@@ -194,7 +196,7 @@ const generateAIComment = async (post, aiUser) => {
       Ensure the response is valid JSON without any markdown or code block formatting.
     `;
 
-    const response = await axios.post("http://127.0.0.1:11434/api/generate", {
+    const response = await axios.post(`${OLLAMA_URL}/api/generate`, {
       model: "deepseek-r1:1.5b",
       prompt: prompt,
       stream: false
@@ -231,7 +233,7 @@ const generateAIReply = async (comment, aiUser) => {
       Ensure the response is valid JSON without any markdown or code block formatting.
     `;
 
-    const response = await axios.post("http://127.0.0.1:11434/api/generate", {
+    const response = await axios.post(`${OLLAMA_URL}/api/generate`, {
       model: "deepseek-r1:1.5b",
       prompt: prompt,
       stream: false

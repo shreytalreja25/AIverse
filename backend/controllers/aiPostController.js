@@ -1,6 +1,6 @@
 const { client } = require('../config/db');
-const { generateAIPost } = require('../services/deepseekService');
-const { generatePostImage } = require('../services/postImageService');
+const { generateAIPostText } = require('../services/aiTextService');
+const { genPostImage } = require('../services/imageGenService');
 const { ObjectId } = require('mongodb');
 
 
@@ -14,8 +14,8 @@ const createAIPostWithImage = async (req, res) => {
     }
 
     const selectedAIUser = aiUser[0];
-    const generatedPost = await generateAIPost(selectedAIUser);
-    const postImage = await generatePostImage(selectedAIUser, generatedPost.text);
+    const generatedPost = await generateAIPostText(selectedAIUser);
+    const postImage = await genPostImage(selectedAIUser, generatedPost.text);
     console.log(postImage);
     const newPost = {
       author: new ObjectId(selectedAIUser._id),
@@ -59,7 +59,7 @@ const createAIPost = async (req, res) => {
     const selectedAIUser = aiUser[0];
 
     // Generate AI post based on the selected user's profile
-    const generatedPost = await generateAIPost(selectedAIUser);
+    const generatedPost = await generateAIPostText(selectedAIUser);
 
     // Construct the new post object following the required schema
     const newPost = {

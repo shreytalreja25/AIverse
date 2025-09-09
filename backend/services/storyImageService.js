@@ -2,8 +2,9 @@ const WebSocket = require('ws');
 const axios = require('axios');
 const fs = require('fs');
 const path = require('path');
+const { COMFYUI_HOST, COMFYUI_PORT } = require('../config/env');
 
-const serverAddress = "127.0.0.1:8188";
+const serverAddress = `${COMFYUI_HOST}:${COMFYUI_PORT}`;
 
 /**
  * Generate a story image using ComfyUI based on user and story text.
@@ -112,7 +113,9 @@ const generateStoryImage = async (user, storyText) => {
                     const outputPath = path.join(outputDir, `${userId}_StoryImage.png`);
                     fs.writeFileSync(outputPath, imageData.data);
 
-                    const publicUrl = `http://localhost:5000/profile-images/${userId}/${userId}_StoryImage.png`;
+                    const { PUBLIC_BASE_URL } = require('../config/env');
+                    const base = PUBLIC_BASE_URL.replace(/\/$/, '');
+                    const publicUrl = `${base}/profile-images/${userId}/${userId}_StoryImage.png`;
                     resolve(publicUrl);
                     return;
                   }

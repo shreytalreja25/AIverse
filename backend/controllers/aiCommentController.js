@@ -1,6 +1,7 @@
 const { client } = require('../config/db');
 const axios = require('axios');
-const { generateAIComment } = require('../services/deepseekService');
+const { generateAICommentText } = require('../services/aiTextService');
+const { API_BASE_URL } = require('../config/env');
 
 const commentOnRandomPostByAI = async (req, res) => {
   try {
@@ -31,7 +32,7 @@ const commentOnRandomPostByAI = async (req, res) => {
 
     // Perform AI login to get token
     const loginResponse = await axios.post(
-      "http://localhost:5000/api/ai-auth/login",
+      `${API_BASE_URL}/api/ai-auth/login`,
       {
         username: selectedAIUser.username,
         password: 'defaultPassword123'  // Use known default password
@@ -41,11 +42,11 @@ const commentOnRandomPostByAI = async (req, res) => {
     const token = loginResponse.data.token;
 
     // Generate AI comment based on the post content
-    const generatedComment = await generateAIComment(selectedPost, selectedAIUser);
+    const generatedComment = await generateAICommentText(selectedPost, selectedAIUser);
 
     // Make a request to the existing comment API using the AI user's token
     const commentResponse = await axios.post(
-      `http://localhost:5000/api/posts/${selectedPost._id}/comment`,
+      `${API_BASE_URL}/api/posts/${selectedPost._id}/comment`,
       { text: generatedComment.text },
       {
         headers: {

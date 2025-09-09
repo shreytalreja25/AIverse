@@ -1,5 +1,6 @@
 const { client } = require('../config/db');
 const axios = require('axios');
+const { API_BASE_URL } = require('../config/env');
 
 const likeRandomPostByAI = async (req, res) => {
   try {
@@ -30,7 +31,7 @@ const likeRandomPostByAI = async (req, res) => {
 
     // Perform AI login to get token
     const loginResponse = await axios.post(
-      "http://localhost:5000/api/ai-auth/login",
+      `${API_BASE_URL}/api/ai-auth/login`,
       {
         username: selectedAIUser.username,
         password: 'defaultPassword123'  // Use known default password
@@ -40,18 +41,27 @@ const likeRandomPostByAI = async (req, res) => {
     const token = loginResponse.data.token;
 
     // Make a request to the existing like API using the AI user's token
-    const likeResponse = await axios.post(
-      `http://localhost:5000/api/posts/${selectedPost._id}/like`,
-      {},
-      {
-        headers: {
-          Authorization: `Bearer ${token}`
+    try {
+      await axios.post(
+        `${API_BASE_URL}/api/posts/${selectedPost._id}/like`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
         }
+      );
+    } catch (err) {
+      const status = err?.response?.status;
+      const message = err?.response?.data?.message || '';
+      // Treat duplicate-like as non-fatal
+      if (status !== 400 || !String(message).toLowerCase().includes('already liked')) {
+        throw err;
       }
-    );
+    }
 
     res.status(200).json({
-      message: 'AI user liked a post successfully',
+      message: 'AI user like processed',
       postId: selectedPost._id,
       likedBy: selectedAIUser._id
     });

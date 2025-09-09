@@ -1,9 +1,9 @@
 const { MongoClient, ServerApiVersion } = require('mongodb');
-require('dotenv').config(); // Load environment variables
+const env = require('./env');
 
 // Toggle between MongoDB Atlas and Local Database using USE_ATLAS flag
-const useAtlas = process.env.USE_ATLAS === "true";
-const uri = useAtlas ? process.env.MONGO_URI_ATLAS : process.env.MONGO_URI_LOCAL;
+const useAtlas = env.USE_ATLAS;
+const uri = useAtlas ? env.MONGO_URI_ATLAS : env.MONGO_URI_LOCAL;
 
 // MongoDB Client Options
 const clientOptions = {

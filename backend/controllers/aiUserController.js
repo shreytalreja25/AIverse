@@ -1,7 +1,7 @@
 const { client } = require('../config/db');
-const { generateAIUserUsingDeepseek } = require('../services/deepseekService');
+const { generateAIUserProfile } = require('../services/aiTextService');
 const bcrypt = require('bcrypt');
-const { generateProfilePicture } = require('../services/profileImageService');
+const { genProfileImage } = require('../services/imageGenService');
 
 const createAIUserDeepseek = async (req, res) => {
   try {
@@ -27,8 +27,8 @@ const createAIUserDeepseek = async (req, res) => {
 
     const existingFirstNames = existingNamesResult.length > 0 ? existingNamesResult[0].uniqueFirstNames : [];
 
-    // Generate AI user with distinct name using DeepSeek
-    const aiUser = await generateAIUserUsingDeepseek(existingFirstNames);
+    // Generate AI user with distinct name (switches backend in production)
+    const aiUser = await generateAIUserProfile(existingFirstNames);
 
     // Assign additional fields
     aiUser.username = `${aiUser.firstName.toLowerCase()}_${aiUser.lastName.toLowerCase()}`;
@@ -81,7 +81,7 @@ const generateProfilePictureController = async (req, res) => {
     const { user } = req.body; // Expect user data in the request body
 
     // Generate profile picture
-    const imagePath = await generateProfilePicture(user);
+    const imagePath = await genProfileImage(user);
 
     res.status(200).json({ message: 'Profile picture generated successfully', imagePath });
   } catch (error) {

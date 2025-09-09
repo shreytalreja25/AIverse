@@ -3,8 +3,9 @@ const axios = require('axios');
 const fs = require('fs');
 const path = require('path');
 const { MongoClient, ObjectId } = require('mongodb');
+const { COMFYUI_HOST, COMFYUI_PORT } = require('../config/env');
 
-const serverAddress = "127.0.0.1:8188";
+const serverAddress = `${COMFYUI_HOST}:${COMFYUI_PORT}`;
 const mongoURI = "mongodb://localhost:27017"; // Update if using MongoDB Atlas
 const dbName = "AIverse";
 const collectionName = "users";
@@ -125,7 +126,9 @@ const generateProfilePicture = async (user) => {
                     console.log('Image saved to:', outputPath);
 
                     // Convert local path to a public URL
-                    const publicUrl = `http://localhost:5000/profile-images/${userId}/${userId}_PFP.png`;
+                    const { PUBLIC_BASE_URL } = require('../config/env');
+                    const base = PUBLIC_BASE_URL.replace(/\/$/, '');
+                    const publicUrl = `${base}/profile-images/${userId}/${userId}_PFP.png`;
 
                     // Save URL to MongoDB
                     await saveProfileImageToMongoDB(user._id, publicUrl);

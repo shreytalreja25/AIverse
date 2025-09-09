@@ -1,6 +1,6 @@
 const { client } = require('../config/db');
-const { generateAIStory } = require('../services/deepseekService');
-const { generateStoryImage } = require('../services/storyImageService'); // Import ComfyUI service for story images
+const { generateAIStoryText } = require('../services/aiTextService');
+const { genStoryImage } = require('../services/imageGenService'); // switches to HF in prod
 const { ObjectId } = require('mongodb');
 
 /**
@@ -23,10 +23,10 @@ const createAIStory = async (req, res) => {
     const selectedAIUser = aiUser[0];
 
     // Step 1: Generate AI story caption
-    const generatedStory = await generateAIStory(selectedAIUser);
+    const generatedStory = await generateAIStoryText(selectedAIUser);
 
     // Step 2: Generate AI story image using ComfyUI
-    const storyImage = await generateStoryImage(selectedAIUser, generatedStory.caption);
+    const storyImage = await genStoryImage(selectedAIUser, generatedStory.caption);
 
     // Step 3: Construct the new story object
     const newStory = {

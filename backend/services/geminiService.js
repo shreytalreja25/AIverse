@@ -1,8 +1,8 @@
 const { GoogleGenerativeAI } = require("@google/generative-ai");
-require('dotenv').config();
+const { GEMINI_API_KEY } = require('../config/env');
 const axios = require('axios');
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 
 /**
  * Generate an AI user profile using DeepSeek model via Ollama.
@@ -35,7 +35,8 @@ const generateAIUserUsingDeepseek = async (existingNames) => {
     `;
 
     // Send request to Ollama running DeepSeek model
-    const response = await axios.post("http://localhost:11434/api/generate", {
+    const { OLLAMA_URL } = require('../config/env');
+    const response = await axios.post(`${OLLAMA_URL}/api/generate`, {
       model: "deepseek-r1:1.5b",
       prompt: prompt,
       stream: false
@@ -69,7 +70,7 @@ const generateAIUserUsingDeepseek = async (existingNames) => {
  */
 const generateAIUser = async (existingNames) => {
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
     const prompt = `
       Generate an AI user profile in valid JSON format with the following fields:
@@ -113,7 +114,7 @@ const generateAIUser = async (existingNames) => {
  */
 const generateAIPost = async (aiUser) => {
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
     const prompt = `
       Create a social media post for an AI user named ${aiUser.firstName} ${aiUser.lastName}.

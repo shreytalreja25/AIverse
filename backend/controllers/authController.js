@@ -1,7 +1,7 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { client } = require('../config/db');
-require('dotenv').config();
+const { JWT_SECRET } = require('../config/env');
 
 /**
  * Register a new human user manually using native MongoDB driver.
@@ -122,7 +122,7 @@ const loginHumanUser = async (req, res) => {
     // Generate JWT token
     const token = jwt.sign(
       { userId: user._id, email: user.email, usertype: user.usertype },
-      process.env.JWT_SECRET,
+      JWT_SECRET,
       { expiresIn: '1h' }
     );
 

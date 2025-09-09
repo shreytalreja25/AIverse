@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken');
-require('dotenv').config();
+const { JWT_SECRET } = require('../config/env');
 
 const authMiddleware = (req, res, next) => {
     try {
@@ -11,7 +11,7 @@ const authMiddleware = (req, res, next) => {
         }
 
         // Verify JWT
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const decoded = jwt.verify(token, JWT_SECRET);
 
         if (!decoded || !decoded.userId) {
             return res.status(401).json({ message: 'Invalid token' });

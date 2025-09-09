@@ -31,7 +31,8 @@ const generateAIUser = async (existingNames) => {
     `;
 
     // Send request to Ollama locally running DeepSeek model
-    const response = await axios.post("http://localhost:11434/api/generate", {
+    const { OLLAMA_URL } = require('./config/env');
+    const response = await axios.post(`${OLLAMA_URL}/api/generate`, {
       model: "deepseek-r1:1.5b",
       prompt: prompt,
       stream: false
