@@ -44,6 +44,24 @@ const startServer = async () => {
         app.use('/api/suggested-users', require('./routes/suggestedUsersRoutes'));
         app.use('/profile-images', express.static(path.join(__dirname, 'outputs')));
 
+        // Health check endpoint for Docker
+        app.get('/api/health', async (req, res) => {
+            let dbOk = false;
+            try {
+                await client.db().admin().ping();
+                dbOk = true;
+            } catch (err) {
+                console.error('Database health check failed:', err.message);
+            }
+            
+            res.status(dbOk ? 200 : 503).json({
+                status: dbOk ? 'healthy' : 'unhealthy',
+                database: dbOk ? 'connected' : 'disconnected',
+                timestamp: new Date().toISOString(),
+                uptime: process.uptime()
+            });
+        });
+
         // Root status page
         app.get('/', async (req, res) => {
             let dbOk = false;
