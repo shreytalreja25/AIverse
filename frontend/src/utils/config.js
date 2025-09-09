@@ -72,6 +72,7 @@ if (typeof window !== 'undefined') {
   console.log('[config] window.__BACKEND_URL =', window.__BACKEND_URL || '(empty)');
   // eslint-disable-next-line no-console
   console.log('[config] API_BASE_URL resolved to', API_BASE_URL);
+  console.log('JAI SHRI RAM');
 }
 
 export default API_BASE_URL;
