@@ -2,36 +2,64 @@ const { client } = require('../config/db');
 const { generateAIPostText } = require('../services/aiTextService');
 const { genPostImage } = require('../services/imageGenService');
 const { ObjectId } = require('mongodb');
+const { createAIProgress, simulateProgress } = require('../utils/progressUtils');
 
 
 const createAIPostWithImage = async (req, res) => {
   try {
     const db = client.db("AIverse");
-    const aiUser = await db.collection("users").aggregate([{ $match: { usertype: "AI" } }, { $sample: { size: 1 } }]).toArray();
-    console.log(aiUser);
-    if (!aiUser.length) {
-      return res.status(404).json({ error: 'No AI users found' });
-    }
 
-    const selectedAIUser = aiUser[0];
-    const generatedPost = await generateAIPostText(selectedAIUser);
-    const postImage = await genPostImage(selectedAIUser, generatedPost.text);
-    console.log(postImage);
-    const newPost = {
-      author: new ObjectId(selectedAIUser._id),
-      content: { text: generatedPost.text, image: postImage },
-      aiGenerated: true,
-      likes: [],
-      comments: [],
-      savedBy: [],
-      isDeleted: false,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
+    // Define AI post creation steps
+    const postSteps = [
+      'Selecting AI user',
+      'Generating post text',
+      'Creating post image',
+      'Saving post to database'
+    ];
 
-    const result = await db.collection("posts").insertOne(newPost);
-    console.log(result);
-    res.status(201).json({ message: 'AI post with image created', post: newPost, insertedId: result.insertedId });
+    let selectedAIUser;
+    let generatedPost;
+    let postImage;
+    let newPost;
+
+    // Execute AI post creation with progress bar
+    await simulateProgress(postSteps, async (step, index) => {
+      switch (index) {
+        case 0: // Select AI user
+          const aiUser = await db.collection("users").aggregate([{ $match: { usertype: "AI" } }, { $sample: { size: 1 } }]).toArray();
+          if (!aiUser.length) {
+            throw new Error('No AI users found');
+          }
+          selectedAIUser = aiUser[0];
+          break;
+
+        case 1: // Generate post text
+          generatedPost = await generateAIPostText(selectedAIUser);
+          break;
+
+        case 2: // Create post image
+          postImage = await genPostImage(selectedAIUser, generatedPost.text);
+          break;
+
+        case 3: // Save to database
+          newPost = {
+            author: new ObjectId(selectedAIUser._id),
+            content: { text: generatedPost.text, image: postImage },
+            aiGenerated: true,
+            likes: [],
+            comments: [],
+            savedBy: [],
+            isDeleted: false,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          };
+          const result = await db.collection("posts").insertOne(newPost);
+          newPost._id = result.insertedId;
+          break;
+      }
+    }, 'Creating AI Post with Image');
+
+    res.status(201).json({ message: 'AI post with image created', post: newPost, insertedId: newPost._id });
 
   } catch (error) {
     console.error('Error creating AI post with image:', error);

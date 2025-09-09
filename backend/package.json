@@ -15,6 +15,7 @@
     "@google/generative-ai": "*",
     "axios": "*",
     "bcrypt": "*",
+    "cli-progress": "^3.12.0",
     "cors": "*",
     "dotenv": "*",
     "express": "*",
@@ -25,6 +26,7 @@
     "multer": "*",
     "node-cron": "*",
     "openai": "*",
+    "tqdm": "*",
     "ws": "*"
   },
   "devDependencies": {

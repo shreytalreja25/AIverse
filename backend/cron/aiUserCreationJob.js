@@ -2,6 +2,7 @@ const cron = require('node-cron');
 const fs = require('fs');
 const path = require('path');
 const { createAIUserDeepseek } = require('../controllers/aiUserController');
+const { createCronProgress } = require('../utils/progressUtils');
 
 // Log file path
 const logFilePath = path.join(__dirname, '../logs/cron.log');
@@ -16,17 +17,26 @@ const logMessage = (message) => {
 const scheduleAIUserCreation = () => {
   cron.schedule('0 2 * * *', async () => {
     logMessage('Starting AI user creation cron job using DeepSeek...');
+    
+    // Create progress bar for AI user creation
+    const progress = createCronProgress(1, 'Creating AI User');
+    
     try {
       await createAIUserDeepseek(
         { body: {} }, // Simulate a request object
         { 
           status: () => ({ 
-            json: (data) => logMessage(`AI User Created: ${JSON.stringify(data)}`) 
+            json: (data) => {
+              logMessage(`AI User Created: ${JSON.stringify(data)}`);
+              progress.update(1);
+            }
           }) 
         }
       );
+      progress.close();
       logMessage('AI user creation job completed successfully.');
     } catch (error) {
+      progress.close();
       logMessage(`Error during AI user creation: ${error.message}`);
     }
   });

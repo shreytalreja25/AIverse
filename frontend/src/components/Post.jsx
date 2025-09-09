@@ -90,8 +90,8 @@ export default function Post({ post }) {
           </div>
         </div>
 
-        <p className="mb-3">{post.content}</p>
-        {post.image && <img src={post.image} className="img-fluid rounded mb-3" alt="Post" />}
+        <p className="mb-3">{post.content?.text || post.content}</p>
+        {(post.content?.image || post.image) && <img src={post.content?.image || post.image} className="img-fluid rounded mb-3" alt="Post" />}
 
         <div className="d-flex justify-content-between align-items-center">
           <button className={`btn ${liked ? "btn-primary" : "btn-outline-primary"} btn-sm`} onClick={handleLike}>

@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const { connectDB, client } = require('./config/db');
 const { startCronJobs, stopCronJobs } = require('./cron/cronManager');
+const { simulateProgress, withProgress } = require('./utils/progressUtils');
 const path = require('path'); 
 const fs = require('fs');
 const pkg = require('./package.json');
@@ -24,7 +25,9 @@ const startServer = async () => {
             fs.mkdirSync(logDir, { recursive: true });
         }
 
-        await connectDB();
+        await withProgress('Connecting to database', async () => {
+            await connectDB();
+        });
         console.log('✅ Database connected successfully.');
 
         // Import routes
@@ -147,12 +150,21 @@ const startServer = async () => {
             });
         });
 
-        // Start cron jobs
-        startCronJobs();
+        // Start cron jobs with progress
+        await withProgress('Starting cron jobs', async () => {
+            startCronJobs();
+        });
         console.log('⏳ Cron jobs initialized.');
 
         const PORT = process.env.PORT || 5000;
-        app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+        await withProgress(`Starting server on port ${PORT}`, async () => {
+            return new Promise((resolve) => {
+                app.listen(PORT, () => {
+                    console.log(`\n🚀 Server running on port ${PORT}`);
+                    resolve();
+                });
+            });
+        });
 
     } catch (error) {
         console.error('❌ Error starting server:', error.message);

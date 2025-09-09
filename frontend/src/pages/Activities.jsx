@@ -59,6 +59,24 @@ const Container = styled.div`
   z-index: 1;
 `;
 
+// Generate random particles for animation
+const particles = Array.from({ length: 20 }, (_, i) => ({
+  id: i,
+  left: Math.random() * 100,
+  dur: 3 + Math.random() * 4,
+  delay: Math.random() * 2,
+  emoji: ['🌟', '✨', '💫', '⭐', '🌙'][Math.floor(Math.random() * 5)]
+}));
+
+// Generate random stars for night effect
+const stars = Array.from({ length: 50 }, (_, i) => ({
+  id: i,
+  top: Math.random() * 100,
+  left: Math.random() * 100,
+  dur: 2 + Math.random() * 3,
+  delay: Math.random() * 2
+}));
+
 export default function Activities() {
   const { warning } = useNotify();
   const [city, setCity] = useState("");
@@ -112,7 +130,23 @@ export default function Activities() {
       const response = await api.get('/api/posts?limit=20');
       // Sort by likes count and take top posts
       const sortedPosts = response.data.sort((a, b) => (b.likes?.length || 0) - (a.likes?.length || 0));
-      setPosts(sortedPosts);
+      
+      // Transform posts to match Post component expectations
+      const transformedPosts = sortedPosts.map(post => ({
+        id: post._id,
+        content: post.content,
+        likes: post.likes || [],
+        comments: post.comments || [],
+        liked: false, // Will be set based on current user
+        firstName: post.authorInfo?.firstName || 'Unknown',
+        lastName: post.authorInfo?.lastName || 'User',
+        username: post.authorInfo?.username || 'unknown',
+        profileImage: post.authorInfo?.profileImage || null,
+        time: new Date(post.createdAt).toLocaleString(),
+        image: post.content?.image || null
+      }));
+      
+      setPosts(transformedPosts);
     } catch (error) {
       console.error('Error fetching posts:', error);
     }
@@ -167,56 +201,6 @@ export default function Activities() {
   const handlePrev = () => {
     setCurrentIndex((prev) => (prev - 1 + mixedContent.length) % mixedContent.length);
   };
-  // Background visuals adapted from clock app
-  const fall = keyframes`
-    0% { transform: translateY(-20px) translateX(0) rotate(0deg); opacity: 0; }
-    10% { opacity: 0.8; }
-    100% { transform: translateY(120vh) translateX(20px) rotate(30deg); opacity: 0; }
-  `;
-  const twinkle = keyframes`
-    0% { opacity: 0.2; transform: scale(1); }
-    50% { opacity: 0.7; transform: scale(1.15); }
-    100% { opacity: 0.2; transform: scale(1); }
-  `;
-
-  const AnimationLayer = styled.div`
-    pointer-events: none;
-    position: fixed;
-    inset: 0;
-    overflow: hidden;
-    z-index: 0;
-  `;
-
-  const Particle = styled.span`
-    position: absolute;
-    top: -20px;
-    left: ${({ $left }) => $left}%;
-    animation: ${fall} ${({ $dur }) => $dur}s linear ${({ $delay }) => $delay}s infinite;
-    filter: drop-shadow(0 2px 2px rgba(0,0,0,0.2));
-  `;
-
-  const NightLayer = styled.div`
-    pointer-events: none;
-    position: fixed;
-    inset: 0;
-    z-index: 0;
-  `;
-
-  const Star = styled.span`
-    position: absolute;
-    width: 2px;
-    height: 2px;
-    background: rgba(255,255,255,0.9);
-    border-radius: 50%;
-    top: ${({ $top }) => $top}%;
-    left: ${({ $left }) => $left}%;
-    animation: ${twinkle} ${({ $dur }) => $dur}s ease-in-out ${({ $delay }) => $delay}s infinite;
-  `;
-
-  const Container = styled.div`
-    position: relative;
-    z-index: 1;
-  `;
 
   return (
     <Container className="container my-4">
@@ -279,7 +263,22 @@ export default function Activities() {
                   </div>
                 ) : (
                   <div className="w-100 h-100 d-flex align-items-center justify-content-center">
-                    <Post post={mixedContent[currentIndex].data} />
+                    {mixedContent[currentIndex].type === 'post' ? (
+                      <Post post={mixedContent[currentIndex].data} />
+                    ) : (
+                      <div className="text-center text-white">
+                        <h4>{mixedContent[currentIndex].data.title}</h4>
+                        <p>{mixedContent[currentIndex].data.description}</p>
+                        {mixedContent[currentIndex].data.image && (
+                          <img 
+                            src={mixedContent[currentIndex].data.image} 
+                            alt={mixedContent[currentIndex].data.title}
+                            className="img-fluid rounded"
+                            style={{ maxHeight: '300px' }}
+                          />
+                        )}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
