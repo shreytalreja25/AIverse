@@ -2,6 +2,7 @@ const axios = require('axios');
 const { generatePostImage } = require('./postImageService');
 const { generateProfilePicture } = require('./profileImageService');
 const { generateStoryImage } = require('./storyImageService');
+const { getPlaceholderAvatar, getPlaceholderPostImage, getPlaceholderStoryImage } = require('./placeholderImageService');
 const { IS_PROD, HUGGINGFACE_API_KEY, HF_TXT2IMG_MODEL } = require('../config/env');
 
 // Simple free image generation using Hugging Face Inference API (text-to-image)
@@ -9,7 +10,8 @@ const { IS_PROD, HUGGINGFACE_API_KEY, HF_TXT2IMG_MODEL } = require('../config/en
 async function hfTextToImage(prompt) {
   const apiKey = HUGGINGFACE_API_KEY;
   const primaryModel = HF_TXT2IMG_MODEL;
-  const fallbackModel = 'stabilityai/stable-diffusion-2-1';
+  // Use a widely available public model id. 2-1 endpoint often 404s on HF Inference API
+  const fallbackModel = 'runwayml/stable-diffusion-v1-5';
   if (!apiKey) throw new Error('HUGGINGFACE_API_KEY missing');
 
   async function requestModel(model) {
@@ -28,30 +30,44 @@ async function hfTextToImage(prompt) {
     // If 404 or 5xx, try fallback model
     const status = err?.response?.status;
     if (status === 404 || (status >= 500 && status < 600)) {
-      const res = await requestModel(fallbackModel);
-      const base64 = Buffer.from(res.data, 'binary').toString('base64');
-      return `data:image/png;base64,${base64}`;
+      try {
+        const res = await requestModel(fallbackModel);
+        const base64 = Buffer.from(res.data, 'binary').toString('base64');
+        return `data:image/png;base64,${base64}`;
+      } catch (e) {
+        // Final fallback to placeholder
+        return null;
+      }
     }
-    throw err;
+    return null;
   }
 }
 
 async function genProfileImage(user) {
-  if (!IS_PROD) return await generateProfilePicture(user);
+  try {
+    if (!IS_PROD) return await generateProfilePicture(user);
+  } catch (_) {}
   const prompt = `Portrait profile picture of ${user.firstName} ${user.lastName}, ${user.gender}, ${user.occupation}. Clean background, professional.`;
-  return await hfTextToImage(prompt);
+  const img = await hfTextToImage(prompt);
+  return img || getPlaceholderAvatar(`${user.firstName} ${user.lastName}`);
 }
 
 async function genPostImage(user, postText) {
-  if (!IS_PROD) return await generatePostImage(user, postText);
+  try {
+    if (!IS_PROD) return await generatePostImage(user, postText);
+  } catch (_) {}
   const prompt = `Social media post image. Theme based on: ${postText}. Aesthetic, modern.`;
-  return await hfTextToImage(prompt);
+  const img = await hfTextToImage(prompt);
+  return img || getPlaceholderPostImage(postText);
 }
 
 async function genStoryImage(user, storyText) {
-  if (!IS_PROD) return await generateStoryImage(user, storyText);
+  try {
+    if (!IS_PROD) return await generateStoryImage(user, storyText);
+  } catch (_) {}
   const prompt = `Instagram story style image for ${user.firstName}. Caption context: ${storyText}.`;
-  return await hfTextToImage(prompt);
+  const img = await hfTextToImage(prompt);
+  return img || getPlaceholderStoryImage(storyText);
 }
 
 module.exports = { genProfileImage, genPostImage, genStoryImage };

@@ -2,6 +2,7 @@ const { client } = require('../config/db');
 const { generateAIUserProfile } = require('../services/aiTextService');
 const bcrypt = require('bcrypt');
 const { genProfileImage } = require('../services/imageGenService');
+const { getPlaceholderAvatar } = require('../services/placeholderImageService');
 
 const createAIUserDeepseek = async (req, res) => {
   try {
@@ -65,6 +66,11 @@ const createAIUserDeepseek = async (req, res) => {
       recoveryEmail: '',
       securityQuestions: []
     };
+
+    // Ensure placeholder profile image if not set during generation
+    if (!aiUser.profileImage) {
+      aiUser.profileImage = getPlaceholderAvatar(`${aiUser.firstName} ${aiUser.lastName}`);
+    }
 
     // Insert the AI user into the database
     const result = await db.collection("users").insertOne(aiUser);

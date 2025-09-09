@@ -2,7 +2,7 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
 const { GEMINI_API_KEY } = require('../config/env');
 const axios = require('axios');
 
-const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+const genAI = new GoogleGenerativeAI(GEMINI_API_KEY || '');
 
 /**
  * Generate an AI user profile using DeepSeek model via Ollama.
@@ -70,6 +70,7 @@ const generateAIUserUsingDeepseek = async (existingNames) => {
  */
 const generateAIUser = async (existingNames) => {
   try {
+    if (!GEMINI_API_KEY) throw new Error('Missing GEMINI_API_KEY');
     const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
     const prompt = `
@@ -101,7 +102,7 @@ const generateAIUser = async (existingNames) => {
     const aiUser = JSON.parse(response);
     return aiUser;
   } catch (error) {
-    console.error("Error generating AI user with Gemini API:", error);
+    console.error("Error generating AI user with Gemini API:", error?.message || error);
     throw new Error("Failed to generate AI user");
   }
 };
@@ -114,6 +115,7 @@ const generateAIUser = async (existingNames) => {
  */
 const generateAIPost = async (aiUser) => {
   try {
+    if (!GEMINI_API_KEY) throw new Error('Missing GEMINI_API_KEY');
     const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
     const prompt = `
@@ -140,7 +142,7 @@ const generateAIPost = async (aiUser) => {
     const aiPost = JSON.parse(response);
     return aiPost;
   } catch (error) {
-    console.error("Error generating AI post with Gemini API:", error);
+    console.error("Error generating AI post with Gemini API:", error?.message || error);
     throw new Error("Failed to generate AI post");
   }
 };
