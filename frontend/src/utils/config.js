@@ -22,13 +22,17 @@ let chosen = '';
 // Priority order: Environment variables > Meta tags > Window variables > Defaults
 if (resolvedFromEnv && resolvedFromEnv.trim()) {
   chosen = resolvedFromEnv.trim();
+  console.log('[config] Using API URL from environment variables:', chosen);
 } else if (resolvedFromMeta && resolvedFromMeta.trim()) {
   chosen = resolvedFromMeta.trim();
+  console.log('[config] Using API URL from meta tag:', chosen);
 } else if (resolvedFromWindow && String(resolvedFromWindow).trim()) {
   chosen = String(resolvedFromWindow).trim();
+  console.log('[config] Using API URL from window object:', chosen);
 } else {
   // Use production URL for Vercel deployments, local for development
   chosen = (isProduction || isVercel) ? defaultProductionUrl : defaultLocalUrl;
+  console.log('[config] Using default API URL:', chosen, '(isProduction:', isProduction, ', isVercel:', isVercel, ')');
 }
 
 // Safety checks to prevent using frontend URL as backend
@@ -62,6 +66,10 @@ if (typeof window !== 'undefined') {
   console.log('[config] meta[backend-base-url] =', resolvedFromMeta || '(empty)');
   // eslint-disable-next-line no-console
   console.log('[config] window.__VITE_API_URL =', resolvedFromWindow || '(empty)');
+  // eslint-disable-next-line no-console
+  console.log('[config] window.__API_BASE_URL =', window.__API_BASE_URL || '(empty)');
+  // eslint-disable-next-line no-console
+  console.log('[config] window.__BACKEND_URL =', window.__BACKEND_URL || '(empty)');
   // eslint-disable-next-line no-console
   console.log('[config] API_BASE_URL resolved to', API_BASE_URL);
 }
