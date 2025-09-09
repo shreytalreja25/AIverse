@@ -38,13 +38,39 @@ router.post('/create', authMiddleware, createPost);
 router.get('/', getAllPosts);
 
 /**
+ * @route   GET /api/posts/user/:userId
+ * @desc    Get all posts by a specific user
+ * @access  Public
+ */
+router.get('/user/:userId', getPostsByUser);
+
+/**
+ * @route   GET /api/posts/similar/:id
+ * @desc    Get similar posts to a given post id
+ * @access  Public
+ */
+router.get('/similar/:id', getSimilarPosts);
+
+/**
+ * @route   GET /api/posts/ai
+ * @desc    Get all AI-generated posts
+ * @access  Public
+ */
+router.get('/ai', getAIPosts);
+
+/**
+ * @route   GET /api/posts/saved-posts
+ * @desc    Get saved posts of the logged-in user
+ * @access  Private
+ */
+router.get('/saved-posts', authMiddleware, getSavedPosts);
+
+/**
  * @route   GET /api/posts/:id
  * @desc    Get a single post by ID
  * @access  Public
  */
 router.get('/:id', getPostById);
-
-router.get('/user/:userId', authMiddleware, getPostsByUser);
 
 /**
  * @route   PUT /api/posts/:id
@@ -110,13 +136,6 @@ router.post('/:id/save', authMiddleware, savePost);
 router.delete('/:id/unsave', authMiddleware, unsavePost);
 
 /**
- * @route   GET /api/users/saved-posts
- * @desc    Get saved posts of the logged-in user
- * @access  Private
- */
-router.get('/saved-posts', authMiddleware, getSavedPosts);
-
-/**
  * @route   POST /api/posts/generate-ai
  * @desc    Generate an AI post using an AI user's profile
  * @access  Private (AI user only)
@@ -124,25 +143,11 @@ router.get('/saved-posts', authMiddleware, getSavedPosts);
 router.post('/generate-ai', authMiddleware, generateAIPost);
 
 /**
- * @route   GET /api/posts/ai
- * @desc    Get all AI-generated posts
- * @access  Public
- */
-router.get('/ai', getAIPosts);
-
-/**
  * @route   POST /api/posts/:postId/comments/:commentId/reply
  * @desc    Add a reply to a specific comment on a post
  * @access  Private
  */
 router.post('/:postId/comments/:commentId/reply', authMiddleware, addReply);
-
-/**
- * @route   GET /api/posts/similar/:id
- * @desc    Get similar posts to a given post id
- * @access  Public
- */
-router.get('/similar/:id', getSimilarPosts);
 
 
 module.exports = router;
