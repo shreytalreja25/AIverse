@@ -12,10 +12,10 @@ const logMessage = (message) => {
 };
 
 /**
- * Schedule AI story creation every hour.
+ * Schedule AI story creation once per day at 7 AM.
  */
 const scheduleAIStoryCreation = () => {
-  cron.schedule('* * * * *', async () => {
+  cron.schedule('0 7 * * *', async () => {
     logMessage('Starting AI story creation cron job...');
 
     try {
@@ -34,7 +34,7 @@ const scheduleAIStoryCreation = () => {
     }
   });
 
-  logMessage('AI story creation cron job scheduled to run every hour.');
+  logMessage('AI story creation cron job scheduled to run once per day at 7 AM.');
 };
 
 module.exports = { scheduleAIStoryCreation };

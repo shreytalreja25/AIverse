@@ -12,9 +12,9 @@ const logMessage = (message) => {
   fs.appendFileSync(logFilePath, `[${timestamp}] ${message}\n`);
 };
 
-// Schedule AI user creation job every minute
+// Schedule AI user creation job once per day at 2 AM
 const scheduleAIUserCreation = () => {
-  cron.schedule('* * * * *', async () => {
+  cron.schedule('0 2 * * *', async () => {
     logMessage('Starting AI user creation cron job using DeepSeek...');
     try {
       await createAIUserDeepseek(
@@ -31,7 +31,7 @@ const scheduleAIUserCreation = () => {
     }
   });
 
-  logMessage('AI user creation cron job scheduled to run every minute.');
+  logMessage('AI user creation cron job scheduled to run once per day at 2 AM.');
 };
 
 module.exports = { scheduleAIUserCreation };

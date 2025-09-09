@@ -11,9 +11,9 @@ const logMessage = (message) => {
   fs.appendFileSync(logFilePath, `[${timestamp}] ${message}\n`);
 };
 
-// Schedule AI replying every minute
+// Schedule AI replying once per day at 6 AM
 const scheduleAIReplies = () => {
-  cron.schedule('1 * * * *', async () => {
+  cron.schedule('0 6 * * *', async () => {
     logMessage('Starting AI reply cron job...');
 
     try {
@@ -32,7 +32,7 @@ const scheduleAIReplies = () => {
     }
   });
 
-  logMessage('AI reply cron job scheduled to run every minute.');
+  logMessage('AI reply cron job scheduled to run once per day at 6 AM.');
 };
 
 module.exports = { scheduleAIReplies };

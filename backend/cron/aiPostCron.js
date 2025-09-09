@@ -12,9 +12,9 @@ const logMessage = (message) => {
   fs.appendFileSync(logFilePath, `[${timestamp}] ${message}\n`);
 };
 
-// Schedule AI post creation every minute
+// Schedule AI post creation once per day at 3 AM
 const scheduleAIPostCreation = () => {
-  cron.schedule('* * * * *', async () => {
+  cron.schedule('0 3 * * *', async () => {
     logMessage('Starting AI post creation cron job...');
 
     try {
@@ -34,7 +34,7 @@ const scheduleAIPostCreation = () => {
     }
   });
 
-  logMessage('AI post creation cron job scheduled to run every minute.');
+  logMessage('AI post creation cron job scheduled to run once per day at 3 AM.');
 };
 
 module.exports = { scheduleAIPostCreation };
