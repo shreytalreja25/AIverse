@@ -1,4 +1,4 @@
-const { IS_PROD } = require('../config/env');
+const { IS_PROD, OLLAMA_URL } = require('../config/env');
 const { getPlaceholderPostImage } = require('./placeholderImageService');
 
 // Text generation backends
@@ -7,6 +7,12 @@ const gemini = require('./geminiService');
 
 const textBackend = IS_PROD ? gemini : deepseek;
 
+function isLocalOllama(url) {
+  if (!url) return false;
+  const u = String(url).toLowerCase();
+  return u.includes('127.0.0.1') || u.includes('localhost');
+}
+
 async function generateAIUserProfile(existingNames) {
   // deepseekService and geminiService both export generateAIUserUsingDeepseek/generateAIUser
   if (IS_PROD) {
@@ -14,10 +20,13 @@ async function generateAIUserProfile(existingNames) {
     try {
       return await gemini.generateAIUser(existingNames);
     } catch (e) {
-      // Soft fallback to DeepSeek in prod if Gemini fails (e.g., missing key)
+      // Soft fallback to DeepSeek in prod if allowed and reachable (avoid localhost in prod)
       try {
-        return await deepseek.generateAIUserUsingDeepseek(existingNames);
-      } catch (_) {
+        if (!isLocalOllama(OLLAMA_URL)) {
+          return await deepseek.generateAIUserUsingDeepseek(existingNames);
+        }
+      } catch (_) {}
+      {
         // Last resort minimal stub to keep flows running
         const firstName = `AI${Math.floor(Math.random()*1000)}`;
         return {
@@ -44,10 +53,11 @@ async function generateAIPostText(aiUser) {
     } catch (e) {
       // Fallback chain
       try {
-        return await deepseek.generateAIPost(aiUser);
-      } catch (_) {
-        return { text: `Hello from ${aiUser.firstName} ${aiUser.lastName}!`, image: getPlaceholderPostImage('AIverse Post') };
-      }
+        if (!isLocalOllama(OLLAMA_URL)) {
+          return await deepseek.generateAIPost(aiUser);
+        }
+      } catch (_) {}
+      return { text: `Hello from ${aiUser.firstName} ${aiUser.lastName}!`, image: getPlaceholderPostImage('AIverse Post') };
     }
   }
   return await deepseek.generateAIPost(aiUser);
@@ -61,11 +71,12 @@ async function generateAIStoryText(aiUser) {
       return { image: null, caption: post.text };
     } catch (e) {
       try {
-        const post = await deepseek.generateAIPost(aiUser);
-        return { image: null, caption: post.text };
-      } catch (_) {
-        return { image: null, caption: `Updates from ${aiUser.firstName} ${aiUser.lastName}` };
-      }
+        if (!isLocalOllama(OLLAMA_URL)) {
+          const post = await deepseek.generateAIPost(aiUser);
+          return { image: null, caption: post.text };
+        }
+      } catch (_) {}
+      return { image: null, caption: `Updates from ${aiUser.firstName} ${aiUser.lastName}` };
     }
   }
   return await deepseek.generateAIStory(aiUser);
@@ -79,11 +90,12 @@ async function generateAICommentText(post, aiUser) {
       return { text: generated.text?.slice(0, 240) || 'Nice!' };
     } catch (e) {
       try {
-        const generated = await deepseek.generateAIPost(aiUser);
-        return { text: generated.text?.slice(0, 240) || 'Nice!' };
-      } catch (_) {
-        return { text: 'Nice!' };
-      }
+        if (!isLocalOllama(OLLAMA_URL)) {
+          const generated = await deepseek.generateAIPost(aiUser);
+          return { text: generated.text?.slice(0, 240) || 'Nice!' };
+        }
+      } catch (_) {}
+      return { text: 'Nice!' };
     }
   }
   return await deepseek.generateAIComment(post, aiUser);
@@ -96,11 +108,12 @@ async function generateAIReplyText(comment, aiUser) {
       return { text: generated.text?.slice(0, 240) || 'Totally agree!' };
     } catch (e) {
       try {
-        const generated = await deepseek.generateAIPost(aiUser);
-        return { text: generated.text?.slice(0, 240) || 'Totally agree!' };
-      } catch (_) {
-        return { text: 'Totally agree!' };
-      }
+        if (!isLocalOllama(OLLAMA_URL)) {
+          const generated = await deepseek.generateAIPost(aiUser);
+          return { text: generated.text?.slice(0, 240) || 'Totally agree!' };
+        }
+      } catch (_) {}
+      return { text: 'Totally agree!' };
     }
   }
   return await deepseek.generateAIReply(comment, aiUser);

@@ -12,7 +12,7 @@ async function hfTextToImage(prompt) {
   const primaryModel = HF_TXT2IMG_MODEL;
   // Use a widely available public model id. 2-1 endpoint often 404s on HF Inference API
   const fallbackModel = 'runwayml/stable-diffusion-v1-5';
-  if (!apiKey) throw new Error('HUGGINGFACE_API_KEY missing');
+  if (!apiKey) return null;
 
   async function requestModel(model) {
     const url = `https://api-inference.huggingface.co/models/${model}`;

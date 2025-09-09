@@ -34,7 +34,14 @@ const COMFYUI_HOST = process.env.COMFYUI_HOST || '127.0.0.1';
 const COMFYUI_PORT = parseInt(process.env.COMFYUI_PORT || '8188', 10);
 
 // AI provider keys
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
+// Support common alias env var names used by various hosts/providers
+const GEMINI_API_KEY =
+  process.env.GEMINI_API_KEY ||
+  process.env.GOOGLE_API_KEY ||
+  process.env.GOOGLE_GENAI_API_KEY ||
+  process.env.GENERATIVE_LANGUAGE_API_KEY ||
+  process.env.GOOGLE_GENERATIVE_AI_API_KEY ||
+  '';
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY || '';
 const HUGGINGFACE_API_KEY = process.env.HUGGINGFACE_API_KEY || process.env.HF_API_KEY || '';
 // Use a widely available model as default; can be overridden via env
