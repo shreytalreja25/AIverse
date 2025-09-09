@@ -10,8 +10,71 @@ const env = require('./config/env');
 
 const app = express();
 
-// Enable CORS
-app.use(cors());
+// Enable CORS with flexible configuration
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    // Allow localhost for development
+    if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
+      return callback(null, true);
+    }
+    
+    // Allow Vercel domains
+    if (origin.includes('vercel.app')) {
+      return callback(null, true);
+    }
+    
+    // Allow your specific production domain
+    if (origin === 'https://aiverse-opal.vercel.app') {
+      return callback(null, true);
+    }
+    
+    // Allow environment-specified CORS origin
+    if (process.env.CORS_ORIGIN && origin === process.env.CORS_ORIGIN) {
+      return callback(null, true);
+    }
+    
+    // For development, allow all origins
+    if (process.env.NODE_ENV === 'development') {
+      return callback(null, true);
+    }
+    
+    // Reject other origins
+    callback(new Error('Not allowed by CORS'));
+  },
+  credentials: process.env.CORS_CREDENTIALS === 'true' || true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  optionsSuccessStatus: 200
+};
+
+app.use(cors(corsOptions));
+
+// Additional CORS headers for extra compatibility
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  
+  // Log CORS requests for debugging
+  if (origin) {
+    console.log(`[CORS] Request from origin: ${origin}`);
+  }
+  
+  res.header('Access-Control-Allow-Origin', origin || '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  
+  // Handle preflight requests
+  if (req.method === 'OPTIONS') {
+    console.log(`[CORS] Handling preflight request for ${origin}`);
+    res.status(200).end();
+    return;
+  }
+  
+  next();
+});
 
 // Middleware to parse JSON
 app.use(express.json());
