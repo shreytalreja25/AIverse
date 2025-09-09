@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import profilePlaceholder from "../assets/user-profile.png";
-import API_BASE_URL from "../utils/config"; // Import dynamic backend URL
+import api from "../utils/apiClient";
 import { useNotify } from "../components/Notify.jsx";
 import { getValidToken, clearAuth } from "../utils/auth.js";
 
@@ -17,27 +17,10 @@ export default function ProfilePage() {
   useEffect(() => {
     const token = localStorage.getItem("token");
 
-    // Fetch user profile
     const fetchUserProfile = async () => {
       try {
-        const url = `${API_BASE_URL}/api/profile/${id}`;
-        console.log('[ProfilePage] Fetching profile from:', url);
-        const response = await fetch(url, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        if (!response.ok) {
-          throw new Error("Failed to fetch user profile");
-        }
-        const data = await response.json();
-
-        setUser({
-          ...data,
-          profileImage: data.profileImage || profilePlaceholder,
-        });
-
-        // Check if the logged-in user is following this profile
+        const { data } = await api.get(`/api/profile/${id}`);
+        setUser({ ...data, profileImage: data.profileImage || profilePlaceholder });
         const loggedInUser = JSON.parse(localStorage.getItem("user"));
         if (loggedInUser) {
           setIsFollowing(data.followers.some((follower) => follower.userId === loggedInUser.id));
@@ -49,21 +32,10 @@ export default function ProfilePage() {
       }
     };
 
-    // Fetch user posts
     const fetchUserPosts = async () => {
       try {
-        const url = `${API_BASE_URL}/api/posts/user/${id}`;
-        console.log('[ProfilePage] Fetching posts from:', url);
-        const response = await fetch(url, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        if (!response.ok) {
-          throw new Error("Failed to fetch user posts");
-        }
-        const postsData = await response.json();
-        setUserPosts(postsData);
+        const { data } = await api.get(`/api/posts/user/${id}`);
+        setUserPosts(data);
       } catch (error) {
         console.error("Error fetching user posts:", error);
       }
@@ -73,41 +45,27 @@ export default function ProfilePage() {
     fetchUserPosts();
   }, [id]);
 
-  // Handle follow/unfollow action
   const handleFollowToggle = async () => {
     const token = getValidToken();
     if (!token) return warning("Please log in to follow users.");
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/users/${id}/${isFollowing ? "unfollow" : "follow"}`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (response.ok) {
-        setIsFollowing(!isFollowing);
-        setUser((prevState) => ({
-          ...prevState,
-          followers: isFollowing
-            ? prevState.followers.filter((f) => f.userId !== id)
-            : [...prevState.followers, { userId: id, followedAt: new Date() }],
-        }));
-      } else {
-        const data = await response.json();
-        if (response.status === 401) {
-          notifyError('Session expired. Please log in again.');
-          clearAuth();
-          window.location.href = '/login';
-        } else {
-          notifyError(data.message || "Failed to update follow status");
-        }
-      }
+      await api.post(`/api/users/${id}/${isFollowing ? "unfollow" : "follow"}`);
+      setIsFollowing(!isFollowing);
+      setUser((prevState) => ({
+        ...prevState,
+        followers: isFollowing
+          ? prevState.followers.filter((f) => f.userId !== id)
+          : [...prevState.followers, { userId: id, followedAt: new Date() }],
+      }));
     } catch (error) {
-      console.error("Error following/unfollowing user:", error);
-      notifyError("An error occurred. Please try again later.");
+      if (error?.response?.status === 401) {
+        notifyError('Session expired. Please log in again.');
+        clearAuth();
+        window.location.href = '/login';
+      } else {
+        notifyError(error?.response?.data?.message || "Failed to update follow status");
+      }
     }
   };
 
@@ -154,7 +112,6 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* User Posts Section */}
       <div className="mt-5">
         <h4 className="fw-bold text-primary mb-4">User Posts</h4>
         <div className="row row-cols-1 row-cols-md-3 g-4">

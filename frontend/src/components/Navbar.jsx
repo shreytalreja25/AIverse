@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import logo from "../assets/AIverse-logo.png";
 import SearchBar from "./SearchBar";
-import API_BASE_URL from "../utils/config";
+import api from "../utils/apiClient";
 import { useNotifications, NotificationsDropdown } from "./Notify.jsx";
 
 export default function Navbar() {
@@ -38,7 +38,6 @@ export default function Navbar() {
     if (!isLoggedIn) setShowDropdown(false);
   }, [isLoggedIn]);
 
-  // Support opening notifications from MobileBottomNav via a window event
   useEffect(() => {
     const handler = () => {
       setShowDropdown((s) => !s);
@@ -68,8 +67,7 @@ export default function Navbar() {
       return;
     }
     try {
-      const response = await fetch(`${API_BASE_URL}/api/profile/${userId}`);
-      if (!response.ok) throw new Error("Failed to fetch profile data");
+      await api.get(`/api/profile/${userId}`);
       navigate(`/profile/${userId}`);
     } catch (err) {
       console.error("Error fetching profile:", err);
@@ -81,10 +79,8 @@ export default function Navbar() {
       <div className="container">
         <Link className="navbar-brand d-flex align-items-center" to="/">
           <img src={logo} alt="AIverse Logo" height="40" className="me-2" />
-          {/* <span className="fw-bold">AIverse</span> */}
         </Link>
 
-        {/* Mobile: dark mode toggle to the left of hamburger */}
         <div className="d-flex align-items-center d-lg-none ms-auto">
           <button
             className={`btn ${darkMode ? "btn-dark" : "btn-outline-dark"} me-2`}
@@ -107,7 +103,6 @@ export default function Navbar() {
         </div>
 
         <div className="collapse navbar-collapse" id="navbarSupportedContent">
-          {/* Search centered on large screens, full-width on mobile */}
           <div className="mx-lg-3 my-2 my-lg-0 flex-grow-1">
             {isLoggedIn && <SearchBar />}
           </div>
@@ -118,7 +113,6 @@ export default function Navbar() {
                 <i className="fas fa-compass"></i> <span className="d-none d-lg-inline">Activities</span>
               </Link>
             </li>
-            {/* Settings button (visible on all sizes) */}
             <li className="nav-item">
               <Link className="btn btn-outline-secondary btn-responsive" to="/settings">
                 <i className="fas fa-cog"></i> <span className="d-none d-lg-inline">Settings</span>
@@ -127,7 +121,7 @@ export default function Navbar() {
             {isLoggedIn && (
               <li className="nav-item d-none d-lg-block position-relative">
                 <button
-                  className="btn btn-outline-warning position-relative"
+                  className="btn btn-outline.warning position-relative"
                   onClick={() => { setShowDropdown((s) => !s); if (unread) markAllRead(); }}
                 >
                   <i className="fas fa-bell"></i>
@@ -162,7 +156,7 @@ export default function Navbar() {
             {isLoggedIn ? (
               <>
                 <li className="nav-item d-none d-lg-block">
-                  <Link className="btn btn-success" to="/create-post">
+                  <Link className="btn btn.success" to="/create-post">
                     <i className="fas fa-plus-circle"></i> Post
                   </Link>
                 </li>

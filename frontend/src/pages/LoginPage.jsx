@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import API_BASE_URL from "../utils/config"; // Import dynamic backend URL
+import api from "../utils/apiClient"; // Axios client
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -13,39 +13,27 @@ export default function LoginPage() {
     setError("");
 
     try {
-      const url = `${API_BASE_URL}/api/auth/login-human`;
-      console.log('[LoginPage] Logging in via:', url);
-      const response = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
+      const { data } = await api.post('/api/auth/login-human', { email, password });
 
-      const data = await response.json();
-      console.log('[LoginPage] Response status:', response.status);
+      // Store token and user data in localStorage
+      localStorage.setItem("token", data.token);
+      localStorage.setItem(
+        "user",
+        JSON.stringify({
+          id: data.user.id,
+          username: data.user.username,
+          email: data.user.email,
+          usertype: data.user.usertype,
+        })
+      );
 
-      if (response.ok) {
-        // Store token and user data in localStorage
-        localStorage.setItem("token", data.token);
-        localStorage.setItem(
-          "user",
-          JSON.stringify({
-            id: data.user.id, // Storing the correct user ID
-            username: data.user.username,
-            email: data.user.email,
-            usertype: data.user.usertype,
-          })
-        );
+      // Trigger storage event to update navbar immediately
+      window.dispatchEvent(new Event("storage"));
 
-        // Trigger storage event to update navbar immediately
-        window.dispatchEvent(new Event("storage"));
-
-        navigate("/feed");
-      } else {
-        setError(data.message);
-      }
+      navigate("/feed");
     } catch (err) {
-      setError("An error occurred. Please try again.");
+      const msg = err?.response?.data?.message || err?.message || "An error occurred. Please try again.";
+      setError(msg);
     }
   };
 

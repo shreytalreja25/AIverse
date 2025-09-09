@@ -5,7 +5,7 @@ import profilePlaceholder from "../assets/user-profile.png";
 import Stories from "../components/Stories";
 import RightSidebar from "../components/RightSidebar";
 import NavigationSidebar from "../components/NavigationSidebar";
-import API_BASE_URL from "../utils/config"; // Import dynamic backend URL
+import api from "../utils/apiClient";
 import { useNotify } from "../components/Notify.jsx";
 import { getValidToken, clearAuth } from "../utils/auth.js";
 
@@ -19,21 +19,10 @@ export default function FeedPage() {
   useEffect(() => {
     const fetchPosts = async () => {
       try {
-        const url = `${API_BASE_URL}/api/posts?page=1&limit=10`;
-        console.log('[FeedPage] Fetching posts from:', url);
-        const response = await fetch(url);
-        const data = await response.json();
-
-        if (!response.ok) {
-          console.error('[FeedPage] Non-OK response', response.status, data);
-          throw new Error(data.error || `Failed to fetch posts (status ${response.status})`);
-        }
-
-        console.log('[FeedPage] Posts fetched successfully:', Array.isArray(data) ? data.length : data);
+        const { data } = await api.get('/api/posts', { params: { page: 1, limit: 10 } });
         setPosts(data);
       } catch (error) {
-        setError(error.message);
-        console.error('[FeedPage] Error fetching posts:', error);
+        setError(error?.response?.data?.error || error.message);
       } finally {
         setLoading(false);
       }
@@ -51,36 +40,27 @@ export default function FeedPage() {
     if (!token) return warning("You need to be logged in to like posts!");
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/posts/${postId}/like`, {
-        method: isLiked ? "DELETE" : "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (response.ok) {
-        setPosts((prevPosts) =>
-          prevPosts.map((post) =>
-            post._id === postId
-              ? {
-                  ...post,
-                  likes: isLiked ? post.likes - 1 : post.likes + 1,
-                  liked: !isLiked,
-                }
-              : post
-          )
-        );
+      if (isLiked) {
+        await api.post(`/api/posts/${postId}/unlike`);
       } else {
-        if (response.status === 401) {
-          clearAuth();
-          window.location.href = '/login';
-        } else {
-          console.error("Failed to update like status");
-        }
+        await api.post(`/api/posts/${postId}/like`);
       }
+      setPosts((prevPosts) =>
+        prevPosts.map((post) =>
+          post._id === postId
+            ? {
+                ...post,
+                likes: isLiked ? post.likes - 1 : post.likes + 1,
+                liked: !isLiked,
+              }
+            : post
+        )
+      );
     } catch (error) {
-      console.error("Error liking post:", error);
+      if (error?.response?.status === 401) {
+        clearAuth();
+        window.location.href = '/login';
+      }
     }
   };
 

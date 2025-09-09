@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import API_BASE_URL from "../utils/config"; // Import dynamic backend URL
+import api from "../utils/apiClient";
 import { useNotify } from "../components/Notify.jsx";
 
 export default function RegisterPage() {
@@ -55,20 +55,12 @@ export default function RegisterPage() {
         }
       };
 
-      const response = await fetch(`${API_BASE_URL}/api/auth/register-human`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      const data = await response.json();
-      if (response.ok) {
-        success('Registered successfully');
-        navigate('/login');
-      } else {
-        notifyError(data.message || 'Registration failed');
-      }
+      const { data } = await api.post('/api/auth/register-human', payload);
+      success('Registered successfully');
+      navigate('/login');
     } catch (error) {
-      notifyError('Registration failed, please try again.');
+      const msg = error?.response?.data?.message || 'Registration failed, please try again.';
+      notifyError(msg);
     }
   };
 

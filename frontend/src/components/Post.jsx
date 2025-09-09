@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import profilePlaceholder from "../assets/user-profile.png";
-import API_BASE_URL from "../utils/config"; // Import dynamic backend URL
+import api from "../utils/apiClient";
 import { useNotify } from "./Notify.jsx";
 import { getValidToken, clearAuth } from "../utils/auth.js";
 
@@ -15,14 +15,12 @@ export default function Post({ post }) {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    // Check if the current user has already liked the post
     const currentUser = localStorage.getItem("user") ? JSON.parse(localStorage.getItem("user"))._id : null;
     if (currentUser && post.likes.some((like) => like.user === currentUser)) {
       setLiked(true);
     }
   }, [post.likes]);
 
-  // Handle like/unlike toggle
   const handleLike = async () => {
     const token = getValidToken();
     if (!token) return warning("You need to be logged in to like posts!");
@@ -31,65 +29,43 @@ export default function Post({ post }) {
     setLikes((prevLikes) => (liked ? prevLikes - 1 : prevLikes + 1));
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/posts/${post.id}/like`, {
-        method: liked ? "DELETE" : "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        if (response.status === 401) {
-          clearAuth();
-          return notifyError("Session expired. Please log in again.");
-        }
-        throw new Error("Failed to update like");
+      if (liked) {
+        await api.post(`/api/posts/${post.id}/unlike`);
+      } else {
+        await api.post(`/api/posts/${post.id}/like`);
       }
     } catch (error) {
-      console.error("Error updating like:", error);
+      if (error?.response?.status === 401) {
+        clearAuth();
+        return notifyError("Session expired. Please log in again.");
+      }
       notifyError("Failed to update like. Please try again.");
       setLiked(!liked);
       setLikes((prevLikes) => (liked ? prevLikes + 1 : prevLikes - 1));
     }
   };
 
-  // Handle adding a comment
   const handleAddComment = async () => {
     if (newComment.trim() === "") return;
 
     setLoading(true);
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/posts/${post.id}/comment`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${getValidToken()}`,
-        },
-        body: JSON.stringify({ text: newComment }),
-      });
-
-      if (response.ok) {
-        const newCommentData = await response.json();
-        setComments([...comments, newCommentData]);
-        setNewComment("");
-      } else {
-        if (response.status === 401) {
-          clearAuth();
-          notifyError("Session expired. Please log in again.");
-        } else {
-          notifyError("Failed to add comment");
-        }
-      }
+      const { data } = await api.post(`/api/posts/${post.id}/comment`, { text: newComment });
+      setComments([...comments, data]);
+      setNewComment("");
     } catch (error) {
-      console.error("Error adding comment:", error);
+      if (error?.response?.status === 401) {
+        clearAuth();
+        notifyError("Session expired. Please log in again.");
+      } else {
+        notifyError("Failed to add comment");
+      }
     } finally {
       setLoading(false);
     }
   };
 
-  // Handle post sharing
   const handleShare = () => {
     navigator.clipboard.writeText(`${window.location.origin}/post/${post.id}`);
     success("Post link copied to clipboard!");
