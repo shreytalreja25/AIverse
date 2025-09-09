@@ -1,0 +1,13 @@
+{
+  "name": "aiverse",
+  "version": "1.0.0",
+  "description": "AIverse - AI-powered social media platform",
+  "scripts": {
+    "build": "cd frontend && npm install && npm run build",
+    "dev": "cd frontend && npm run dev",
+    "install": "cd frontend && npm install"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
