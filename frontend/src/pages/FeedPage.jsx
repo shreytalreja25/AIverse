@@ -97,6 +97,7 @@ export default function FeedPage() {
                     post={{
                       id: post._id,
                       _id: post._id, // Include both for compatibility
+                      authorId: post.author, // Add author ID for profile navigation
                       username: post.authorInfo?.username || "Unknown",
                       profileImage: post.authorInfo?.profileImage || profilePlaceholder,
                       content: post.content?.text || post.content,

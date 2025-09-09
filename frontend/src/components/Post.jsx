@@ -104,7 +104,7 @@ export default function Post({ post }) {
             height="50"
           />
           <div>
-            <Link to={`/user/${post.username}`} className="text-primary fw-bold text-decoration-none">
+            <Link to={`/profile/${post.authorId || post._id}`} className="text-primary fw-bold text-decoration-none">
               {post.firstName} {post.lastName} (@{post.username})
             </Link>
             <small className="d-block text-muted">{post.time}</small>

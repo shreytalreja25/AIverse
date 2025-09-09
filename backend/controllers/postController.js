@@ -145,18 +145,33 @@ const getPostById = async (req, res) => {
 };
 
 /**
- * Get all posts by a specific user
+ * Get all posts by a specific user (by ID or username)
  */
 const getPostsByUser = async (req, res) => {
     try {
-        const userId = req.params.userId;
+        const identifier = req.params.userId;
         const db = client.db('AIverse');
+
+        let authorQuery;
+        
+        // Check if identifier is a valid ObjectId
+        if (ObjectId.isValid(identifier)) {
+            // Search by user ID
+            authorQuery = { author: new ObjectId(identifier) };
+        } else {
+            // Search by username - first get the user ID
+            const user = await db.collection('users').findOne({ username: identifier });
+            if (!user) {
+                return res.status(404).json({ message: 'User not found' });
+            }
+            authorQuery = { author: user._id };
+        }
 
         // Aggregate posts with user information
         const posts = await db.collection('posts').aggregate([
             {
                 $match: {
-                    author: new ObjectId(userId),
+                    ...authorQuery,
                     isDeleted: false
                 }
             },

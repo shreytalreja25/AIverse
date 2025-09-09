@@ -72,7 +72,7 @@ export default function SearchResults() {
                     key={user._id}
                     className="text-center"
                     style={{ cursor: 'pointer' }}
-                    onClick={() => navigate(`/profile/${user.username}`)}
+                    onClick={() => navigate(`/profile/${user._id}`)}
                   >
                     <img
                       src={user.profileImage || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.firstName}`}

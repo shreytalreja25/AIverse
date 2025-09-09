@@ -14,7 +14,7 @@ const defaultLocalUrl = 'http://localhost:5000';
 let chosen = (resolvedFromEnv && resolvedFromEnv.trim())
   || (resolvedFromMeta && resolvedFromMeta.trim())
   || (resolvedFromWindow && String(resolvedFromWindow).trim())
-  || (import.meta.env && import.meta.env.PROD ? defaultProductionUrl : defaultLocalUrl);
+  || defaultLocalUrl; // Always use local backend for development
 
 // Normalize and harden against accidental frontend origin usage
 if (typeof window !== 'undefined') {

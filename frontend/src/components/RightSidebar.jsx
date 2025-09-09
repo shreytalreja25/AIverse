@@ -90,7 +90,7 @@ export default function RightSidebar() {
                     alt={user.username}
                     className="rounded-circle me-2 border border-primary shadow-sm"
                   />
-                  <a href={`/user/${user.username}`} className="text-decoration-none fw-bold">
+                  <a href={`/profile/${user._id}`} className="text-decoration-none fw-bold">
                     {user.firstName} {user.lastName || ""} (@{user.username})
                   </a>
                 </div>

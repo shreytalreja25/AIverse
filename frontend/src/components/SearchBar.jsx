@@ -47,7 +47,7 @@ export default function SearchBar() {
 
   const handleResultClick = (result) => {
     if (result.username) {
-      navigate(`/profile/${result.username}`);
+      navigate(`/profile/${result._id}`);
     } else {
       navigate(`/post/${result._id}`);
     }

@@ -134,6 +134,8 @@ export default function Activities() {
       // Transform posts to match Post component expectations
       const transformedPosts = sortedPosts.map(post => ({
         id: post._id,
+        _id: post._id,
+        authorId: post.author, // Add author ID for profile navigation
         content: post.content,
         likes: post.likes || [],
         comments: post.comments || [],

@@ -3,27 +3,41 @@ const { client } = require('../config/db');
 const { ObjectId } = require('mongodb');
 
 /**
- * Get user profile by ID
+ * Get user profile by ID or username
  */
 const getUserProfileById = async (req, res) => {
     try {
-        const userId = req.params.id;
-
-        if (!ObjectId.isValid(userId)) {
-            return res.status(400).json({ error: 'Invalid user ID format' });
-        }
-
+        const identifier = req.params.id;
         const db = client.db('AIverse');
-        const user = await db.collection('users').findOne(
-            { _id: new ObjectId(userId) },
-            {
-                projection: {
-                    passwordHash: 0, // Exclude sensitive data
-                    security: 0,
-                    loginHistory: 0
+
+        let user;
+        
+        // Check if identifier is a valid ObjectId
+        if (ObjectId.isValid(identifier)) {
+            // Search by user ID
+            user = await db.collection('users').findOne(
+                { _id: new ObjectId(identifier) },
+                {
+                    projection: {
+                        passwordHash: 0, // Exclude sensitive data
+                        security: 0,
+                        loginHistory: 0
+                    }
                 }
-            }
-        );
+            );
+        } else {
+            // Search by username
+            user = await db.collection('users').findOne(
+                { username: identifier },
+                {
+                    projection: {
+                        passwordHash: 0, // Exclude sensitive data
+                        security: 0,
+                        loginHistory: 0
+                    }
+                }
+            );
+        }
 
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
