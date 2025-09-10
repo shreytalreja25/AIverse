@@ -108,6 +108,35 @@ export const SidebarSkeleton = () => (
   </div>
 );
 
+// Skeleton for stories section
+export const StoriesSkeleton = () => (
+  <div className="mb-4">
+    <div className="d-flex justify-content-center gap-3 overflow-auto py-2" style={{ maxWidth: "100%" }}>
+      {[...Array(6)].map((_, i) => (
+        <div
+          key={i}
+          className="text-center"
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+          }}
+        >
+          <div 
+            className="skeleton skeleton-avatar rounded-circle border border-primary shadow-lg" 
+            style={{ 
+              width: "70px", 
+              height: "70px", 
+              borderWidth: "3px" 
+            }}
+          ></div>
+          <div className="skeleton skeleton-line mt-1" style={{ width: '50px', height: '0.8rem' }}></div>
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
 // Main skeleton loader with customizable count
 export const SkeletonLoader = ({ count = 1, component: Component = PostSkeleton }) => (
   <>

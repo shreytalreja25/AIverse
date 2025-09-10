@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import Modal from "react-bootstrap/Modal";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa"; // For navigation
 import API_BASE_URL from "../utils/config"; // Import dynamic backend URL
+import { StoriesSkeleton } from "./SkeletonLoader"; // Import skeleton loader
 
 export default function Stories() {
   const [stories, setStories] = useState([]);
@@ -70,7 +71,7 @@ export default function Stories() {
     <div className="mb-4">
       <h5 className="fw-bold text-primary text-center">📸 Stories</h5>
       {loading ? (
-        <p className="text-center">Loading stories...</p>
+        <StoriesSkeleton />
       ) : error ? (
         <p className="text-center text-danger">{error}</p>
       ) : stories.length === 0 ? (

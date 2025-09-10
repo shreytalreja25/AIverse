@@ -13,6 +13,7 @@ export default function ProfilePage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [isFollowing, setIsFollowing] = useState(false);
+  const [isOwnProfile, setIsOwnProfile] = useState(false);
 
   const fetchUserProfile = async () => {
     try {
