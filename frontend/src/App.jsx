@@ -4,6 +4,7 @@ import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import ProfilePage from './pages/ProfilePage';
+import EditProfilePage from './pages/EditProfilePage';
 import FeedPage from './pages/FeedPage';
 import CreatePost from './pages/CreatePost';
 import PostPage from './pages/PostPage';  // Import the new PostPage component
@@ -20,6 +21,7 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/profile/:id" element={<ProfilePage />} />
+          <Route path="/profile/:id/edit" element={<EditProfilePage />} />
           <Route path="/feed" element={<FeedPage />} />
           <Route path="/create-post" element={<CreatePost />} />
           <Route path="/post/:id" element={<PostPage />} />  {/* New Post Page route */}

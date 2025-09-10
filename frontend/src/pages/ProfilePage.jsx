@@ -14,6 +14,7 @@ export default function ProfilePage() {
   const navigate = useNavigate();
   const [isFollowing, setIsFollowing] = useState(false);
   const [isOwnProfile, setIsOwnProfile] = useState(false);
+  const [showDMModal, setShowDMModal] = useState(false);
 
   const fetchUserProfile = async () => {
     try {
@@ -22,6 +23,8 @@ export default function ProfilePage() {
       
       const loggedInUser = JSON.parse(localStorage.getItem("user"));
       if (loggedInUser) {
+        // Check if this is the user's own profile
+        setIsOwnProfile(loggedInUser.id === id);
         setIsFollowing(data.followers.some((follower) => follower.userId === loggedInUser.id));
       }
       
@@ -60,12 +63,8 @@ export default function ProfilePage() {
       }
       
       setIsFollowing(!isFollowing);
-      setUser((prevState) => ({
-        ...prevState,
-        followers: isFollowing
-          ? prevState.followers.filter((f) => f.userId !== id)
-          : [...prevState.followers, { userId: id, followedAt: new Date() }],
-      }));
+      // Refresh user data to get updated follower count
+      refreshUser();
     } catch (error) {
       if (error?.response?.status === 401) {
         notifyError('Session expired. Please log in again.');
@@ -135,21 +134,32 @@ export default function ProfilePage() {
               </div>
             </div>
             <div className="d-flex gap-2 mt-3">
-              <button
-                className={`btn ${isFollowing ? "btn-danger" : "btn-primary"}`}
-                onClick={handleFollowToggle}
-              >
-                {isFollowing ? "Unfollow" : "Follow"}
-              </button>
-              <button
-                className="btn btn-outline-success"
-                onClick={() => {
-                  // Prototype for messaging - show alert for now
-                  alert("Direct messaging feature coming soon! This will allow you to send private messages to this user.");
-                }}
-              >
-                <i className="fas fa-envelope"></i> DM
-              </button>
+              {isOwnProfile ? (
+                <button
+                  className="btn btn-primary"
+                  onClick={() => navigate(`/profile/${id}/edit`)}
+                >
+                  <i className="fas fa-edit"></i> Edit Profile
+                </button>
+              ) : (
+                <>
+                  <button
+                    className={`btn ${isFollowing ? "btn-danger" : "btn-primary"}`}
+                    onClick={handleFollowToggle}
+                  >
+                    {isFollowing ? "Unfollow" : "Follow"}
+                  </button>
+                  <button
+                    className="btn btn-outline-success"
+                    onClick={() => {
+                      // Show DM prototype modal
+                      setShowDMModal(true);
+                    }}
+                  >
+                    <i className="fas fa-envelope"></i> DM
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -182,6 +192,129 @@ export default function ProfilePage() {
           )}
         </div>
       </div>
+
+      {/* DM Prototype Modal */}
+      {showDMModal && (
+        <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content bg-dark text-light">
+              <div className="modal-header border-secondary">
+                <h5 className="modal-title">
+                  <i className="fas fa-envelope text-success me-2"></i>
+                  Direct Message
+                </h5>
+                <button
+                  type="button"
+                  className="btn-close btn-close-white"
+                  onClick={() => setShowDMModal(false)}
+                ></button>
+              </div>
+              <div className="modal-body">
+                <div className="d-flex align-items-center mb-3">
+                  <img
+                    src={user.profileImage}
+                    alt="Profile"
+                    className="rounded-circle me-3"
+                    width="50"
+                    height="50"
+                  />
+                  <div>
+                    <h6 className="mb-0 text-primary">{user.username}</h6>
+                    <small className="text-muted">Online</small>
+                  </div>
+                </div>
+                
+                <div className="chat-container" style={{ height: '300px', overflowY: 'auto', border: '1px solid #444', borderRadius: '8px', padding: '15px', marginBottom: '15px' }}>
+                  <div className="message received mb-3">
+                    <div className="d-flex align-items-start">
+                      <img
+                        src={user.profileImage}
+                        alt="Profile"
+                        className="rounded-circle me-2"
+                        width="30"
+                        height="30"
+                      />
+                      <div className="bg-secondary p-2 rounded" style={{ maxWidth: '70%' }}>
+                        <p className="mb-0">Hey! How are you doing?</p>
+                        <small className="text-muted">2:30 PM</small>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="message sent mb-3">
+                    <div className="d-flex align-items-start justify-content-end">
+                      <div className="bg-primary p-2 rounded text-white" style={{ maxWidth: '70%' }}>
+                        <p className="mb-0">I'm doing great! Thanks for asking. How about you?</p>
+                        <small className="text-light">2:32 PM</small>
+                      </div>
+                      <img
+                        src={profilePlaceholder}
+                        alt="You"
+                        className="rounded-circle ms-2"
+                        width="30"
+                        height="30"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="message received mb-3">
+                    <div className="d-flex align-items-start">
+                      <img
+                        src={user.profileImage}
+                        alt="Profile"
+                        className="rounded-circle me-2"
+                        width="30"
+                        height="30"
+                      />
+                      <div className="bg-secondary p-2 rounded" style={{ maxWidth: '70%' }}>
+                        <p className="mb-0">Pretty good! Just working on some new projects. What's new with you?</p>
+                        <small className="text-muted">2:35 PM</small>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="input-group">
+                  <input
+                    type="text"
+                    className="form-control bg-dark text-light border-secondary"
+                    placeholder="Type a message..."
+                    disabled
+                  />
+                  <button className="btn btn-primary" disabled>
+                    <i className="fas fa-paper-plane"></i>
+                  </button>
+                </div>
+                
+                <div className="alert alert-info mt-3 mb-0">
+                  <i className="fas fa-info-circle me-2"></i>
+                  <strong>Prototype Notice:</strong> This is a preview of the direct messaging feature. Full functionality will be available soon!
+                </div>
+              </div>
+              <div className="modal-footer border-secondary">
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => setShowDMModal(false)}
+                >
+                  Close
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={() => {
+                    setShowDMModal(false);
+                    success("Direct messaging feature coming soon!");
+                  }}
+                >
+                  <i className="fas fa-bell me-2"></i>
+                  Notify Me When Ready
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
