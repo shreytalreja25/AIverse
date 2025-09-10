@@ -1,5 +1,7 @@
 const express = require('express');
 const cors = require('cors');
+const http = require('http');
+const { Server } = require('socket.io');
 const { connectDB, client } = require('./config/db');
 const { startCronJobs, stopCronJobs } = require('./cron/cronManager');
 const { simulateProgress, withProgress } = require('./utils/progressUtils');
@@ -109,6 +111,8 @@ const startServer = async () => {
         app.use('/api/ai-stories', require('./routes/aiStoriesRoute'));
         app.use('/api/search', require('./routes/searchRoutes'));
         app.use('/api/suggested-users', require('./routes/suggestedUsersRoutes'));
+        app.use('/api/webhooks', require('./routes/webhookRoutes'));
+        app.use('/api/content', require('./routes/webhookRoutes'));
         app.use('/profile-images', express.static(path.join(__dirname, 'outputs')));
 
         // Health check endpoint for Docker
@@ -221,10 +225,66 @@ const startServer = async () => {
         console.log('⏳ Cron jobs initialized.');
 
         const PORT = process.env.PORT || 5000;
+        
+        // Create HTTP server
+        const server = http.createServer(app);
+        
+        // Initialize Socket.IO
+        const io = new Server(server, {
+            cors: {
+                origin: function (origin, callback) {
+                    // Allow requests with no origin (like mobile apps or curl requests)
+                    if (!origin) return callback(null, true);
+                    
+                    // Allow localhost for development
+                    if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
+                        return callback(null, true);
+                    }
+                    
+                    // Allow Vercel domains
+                    if (origin.includes('vercel.app')) {
+                        return callback(null, true);
+                    }
+                    
+                    // Allow your specific production domain
+                    if (origin === 'https://aiverse-opal.vercel.app') {
+                        return callback(null, true);
+                    }
+                    
+                    // Allow environment-specified CORS origin
+                    if (process.env.CORS_ORIGIN && origin === process.env.CORS_ORIGIN) {
+                        return callback(null, true);
+                    }
+                    
+                    // For development, allow all origins
+                    if (process.env.NODE_ENV === 'development') {
+                        return callback(null, true);
+                    }
+                    
+                    // Reject other origins
+                    callback(new Error('Not allowed by CORS'));
+                },
+                credentials: true
+            }
+        });
+
+        // Make io globally available for webhook routes
+        global.io = io;
+
+        // Socket.IO connection handling
+        io.on('connection', (socket) => {
+            console.log(`🔌 Client connected: ${socket.id}`);
+            
+            socket.on('disconnect', () => {
+                console.log(`🔌 Client disconnected: ${socket.id}`);
+            });
+        });
+
         await withProgress(`Starting server on port ${PORT}`, async () => {
             return new Promise((resolve) => {
-                app.listen(PORT, () => {
+                server.listen(PORT, () => {
                     console.log(`\n🚀 Server running on port ${PORT}`);
+                    console.log(`🔌 WebSocket server ready at ws://localhost:${PORT}`);
                     resolve();
                 });
             });

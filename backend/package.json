@@ -19,6 +19,8 @@
     "cors": "*",
     "dotenv": "*",
     "express": "*",
+    "express-rate-limit": "*",
+    "express-validator": "*",
     "jsonwebtoken": "*",
     "mongodb": "*",
     "mongoose": "*",
@@ -26,6 +28,7 @@
     "multer": "*",
     "node-cron": "*",
     "openai": "*",
+    "socket.io": "*",
     "tqdm": "*",
     "ws": "*"
   },

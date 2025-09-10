@@ -1,4 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { useEffect } from 'react';
 import Layout from './components/Layout';
 import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
@@ -11,8 +12,19 @@ import PostPage from './pages/PostPage';  // Import the new PostPage component
 import SearchResults from './pages/SearchResults';  // Import the new PostPage component
 import Settings from './pages/Settings';
 import Activities from './pages/Activities';
+import websocketService from './services/websocketService';
 
 function App() {
+  // Initialize WebSocket connection
+  useEffect(() => {
+    websocketService.connect();
+    
+    // Cleanup on unmount
+    return () => {
+      websocketService.disconnect();
+    };
+  }, []);
+
   return (
     <Router>
       <Layout>

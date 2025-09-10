@@ -20,6 +20,7 @@
     "react-dom": "*",
     "react-icons": "*",
     "react-router-dom": "*",
+    "socket.io-client": "*",
     "styled-components": "*"
   },
   "devDependencies": {

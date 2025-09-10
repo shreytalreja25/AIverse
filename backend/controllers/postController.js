@@ -385,6 +385,13 @@ const likePost = async (req, res) => {
             { $push: { likes: { user: new ObjectId(userId), likedAt: new Date() } } }
         );
 
+        // Get user info for notification
+        const liker = await db.collection('users').findOne({ _id: new ObjectId(userId) });
+        const likerName = liker ? `${liker.firstName} ${liker.lastName || ''}`.trim() : 'Someone';
+
+        // Trigger webhook notification for like
+        await triggerLikeWebhook(postId, userId, likerName, post.author, db);
+
         res.status(200).json({ message: 'Post liked successfully' });
     } catch (error) {
         console.error('Error liking post:', error);
@@ -731,7 +738,59 @@ const addReply = async (req, res) => {
     }
 };
 
-module.exports = { 
+// Helper function to trigger like webhook
+const triggerLikeWebhook = async (postId, userId, likerName, postAuthorId, db) => {
+    try {
+        // Create webhook payload for like notification
+        const webhookPayload = {
+            uuid: require('crypto').randomUUID(),
+            timestamp: new Date().toISOString().replace('T', ' ').replace(/\.\d{3}Z$/, ''),
+            eventType: 'like_created',
+            authorId: postAuthorId.toString(),
+            payload: {
+                postId: postId.toString(),
+                userId: userId.toString(),
+                likerName: likerName
+            },
+            createdAt: new Date()
+        };
+
+        // Store webhook event
+        await db.collection('webhook_events').insertOne(webhookPayload);
+
+        // Create notification for the post author
+        const notification = {
+            userId: postAuthorId,
+            type: 'like',
+            message: `${likerName} liked your post`,
+            data: {
+                postId: postId.toString(),
+                likerId: userId.toString(),
+                likerName: likerName
+            },
+            createdAt: new Date(),
+            read: false
+        };
+
+        await db.collection('notifications').insertOne(notification);
+
+        // Broadcast notification via WebSocket
+        if (global.io) {
+            global.io.emit('notification', {
+                type: 'notification',
+                data: notification,
+                timestamp: new Date().toISOString()
+            });
+        }
+
+        console.log(`[Webhook] Like notification sent for post ${postId} by ${likerName}`);
+
+    } catch (error) {
+        console.error('[Webhook] Error triggering like webhook:', error);
+    }
+};
+
+module.exports = {
     createPost, 
     getAllPosts, 
     getPostById, 

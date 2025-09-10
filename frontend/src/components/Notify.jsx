@@ -1,4 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { useNotifications as useWebSocketNotifications } from '../hooks/useWebSocket';
 
 const NotificationContext = createContext(null);
 
@@ -7,6 +8,31 @@ let idSeq = 1;
 export function NotificationProvider({ children }) {
   const [items, setItems] = useState([]);
   const [unread, setUnread] = useState(0);
+  
+  // Get WebSocket notifications
+  const { notifications: wsNotifications, unreadCount: wsUnreadCount } = useWebSocketNotifications();
+
+  // Sync WebSocket notifications with local state
+  useEffect(() => {
+    if (wsNotifications.length > 0) {
+      const newItems = wsNotifications.map(notif => ({
+        id: notif._id || `ws-${idSeq++}`,
+        type: notif.type || 'info',
+        title: 'New Notification',
+        message: notif.message || 'You have a new notification',
+        ts: new Date(notif.createdAt).getTime(),
+        read: notif.read || false,
+        timeoutMs: 5000,
+        action: notif.data?.postId ? {
+          label: 'View',
+          onPress: () => window.location.href = `/post/${notif.data.postId}`
+        } : undefined,
+      }));
+      
+      setItems(prev => [...newItems, ...prev]);
+      setUnread(prev => prev + wsUnreadCount);
+    }
+  }, [wsNotifications, wsUnreadCount]);
 
   const push = useCallback((payload) => {
     const now = Date.now();
