@@ -740,3 +740,240 @@ body.dark-theme {
   box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25) !important;
 }
 
+/* ===== STATUS DASHBOARD STYLES ===== */
+
+/* Status Dashboard Container */
+.status-dashboard {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Status Cards */
+.status-dashboard .card {
+  transition: all 0.3s ease;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  backdrop-filter: blur(10px);
+}
+
+.status-dashboard .card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+  border-color: rgba(0, 123, 255, 0.3) !important;
+}
+
+/* Status Badges */
+.status-dashboard .badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.5rem 0.75rem;
+  border-radius: 20px !important;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.status-dashboard .badge.bg-success {
+  background: linear-gradient(135deg, #28a745, #20c997) !important;
+  box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
+}
+
+.status-dashboard .badge.bg-danger {
+  background: linear-gradient(135deg, #dc3545, #e74c3c) !important;
+  box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
+}
+
+.status-dashboard .badge.bg-warning {
+  background: linear-gradient(135deg, #ffc107, #ffb300) !important;
+  box-shadow: 0 2px 8px rgba(255, 193, 7, 0.3);
+}
+
+.status-dashboard .badge.bg-secondary {
+  background: linear-gradient(135deg, #6c757d, #495057) !important;
+  box-shadow: 0 2px 8px rgba(108, 117, 125, 0.3);
+}
+
+/* Refresh Button */
+.status-dashboard .btn-outline-primary {
+  border-radius: 20px !important;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.status-dashboard .btn-outline-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+}
+
+/* Stats Numbers */
+.status-dashboard .fs-4 {
+  font-weight: 700;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Location Permission Card */
+.status-dashboard .card .text-center {
+  padding: 2rem 1rem;
+}
+
+.status-dashboard .btn-primary {
+  border-radius: 25px !important;
+  font-weight: 600;
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(135deg, #007bff, #0056b3);
+  border: none;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
+}
+
+.status-dashboard .btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 123, 255, 0.4);
+  background: linear-gradient(135deg, #0056b3, #004085);
+}
+
+/* System Stats Grid */
+.status-dashboard .row.g-3 > div {
+  transition: all 0.3s ease;
+}
+
+.status-dashboard .row.g-3 > div:hover {
+  transform: scale(1.02);
+}
+
+/* Tab Navigation */
+.nav-tabs {
+  border-bottom: 2px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+.nav-tabs .nav-link {
+  color: #6c757d !important;
+  border: none !important;
+  border-radius: 10px 10px 0 0 !important;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  margin-right: 0.5rem;
+}
+
+.nav-tabs .nav-link:hover {
+  color: #007bff !important;
+  background-color: rgba(0, 123, 255, 0.1);
+  border: none !important;
+}
+
+.nav-tabs .nav-link.active {
+  color: #007bff !important;
+  background-color: rgba(0, 123, 255, 0.1) !important;
+  border: none !important;
+  border-bottom: 2px solid #007bff !important;
+}
+
+/* Settings General Tab */
+.card.bg-dark {
+  background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Form Controls in Settings */
+.card.bg-dark .form-control {
+  background-color: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  color: #ffffff !important;
+  border-radius: 8px !important;
+  transition: all 0.3s ease;
+}
+
+.card.bg-dark .form-control:focus {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  border-color: #007bff !important;
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25) !important;
+}
+
+.card.bg-dark .form-control::placeholder {
+  color: #6c757d !important;
+}
+
+/* Dark Mode Toggle Button */
+.btn-outline-primary {
+  border-radius: 20px !important;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.btn-outline-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .status-dashboard .card-body {
+    padding: 1rem;
+  }
+  
+  .status-dashboard .row.g-2 > div {
+    margin-bottom: 0.5rem;
+  }
+  
+  .status-dashboard .fs-4 {
+    font-size: 1.5rem !important;
+  }
+  
+  .nav-tabs .nav-link {
+    font-size: 0.9rem;
+    padding: 0.5rem 0.75rem;
+  }
+}
+
+/* Loading Animation */
+.status-dashboard .fa-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* Pulse Animation for Status Indicators */
+@keyframes statusPulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(40, 167, 69, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(40, 167, 69, 0);
+  }
+}
+
+.status-dashboard .badge.bg-success {
+  animation: statusPulse 2s infinite;
+}
+
+/* Glow Effect for Connected Status */
+.status-dashboard .badge.bg-success {
+  position: relative;
+  overflow: hidden;
+}
+
+.status-dashboard .badge.bg-success::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.status-dashboard .badge.bg-success:hover::before {
+  left: 100%;
+}
+
