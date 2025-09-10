@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import API_BASE_URL from "../utils/config"; // Import dynamic backend URL
 import { useNotify } from "../components/Notify.jsx";
 import { getValidToken, clearAuth } from "../utils/auth.js";
+import { compressImage, validateImageFile, formatFileSize, getBase64Size } from "../utils/imageUtils.js";
 
 export default function CreatePost() {
   const navigate = useNavigate();
@@ -15,16 +16,41 @@ export default function CreatePost() {
   const [taggedFriends, setTaggedFriends] = useState("");
   const [visibility, setVisibility] = useState("Public");
   const [loading, setLoading] = useState(false);
+  const [imageSize, setImageSize] = useState(null);
+
 
   // Handle image upload and preview
-  const handleImageUpload = (e) => {
+  const handleImageUpload = async (e) => {
     const file = e.target.files[0];
+    
+    if (!file) return;
+    
+    // Validate the image file
+    const validation = validateImageFile(file, 10); // 10MB limit
+    if (!validation.isValid) {
+      notifyError(validation.error);
+      return;
+    }
+    
     setImage(file);
 
-    if (file) {
+    try {
+      // Compress the image before converting to base64
+      const compressedDataUrl = await compressImage(file);
+      setImageData(compressedDataUrl);
+      setPreview(compressedDataUrl);
+      
+      // Log compression info
+      const originalSize = formatFileSize(file.size);
+      const compressedSize = formatFileSize(getBase64Size(compressedDataUrl));
+      console.log(`Image compressed: ${originalSize} → ${compressedSize}`);
+      setImageSize({ original: originalSize, compressed: compressedSize });
+    } catch (error) {
+      console.error('Error compressing image:', error);
+      // Fallback to original method if compression fails
       const reader = new FileReader();
       reader.onloadend = () => {
-        setImageData(reader.result); // Convert to base64
+        setImageData(reader.result);
       };
       reader.readAsDataURL(file);
       setPreview(URL.createObjectURL(file));
@@ -119,7 +145,14 @@ export default function CreatePost() {
             </label>
             <input type="file" className="form-control" accept="image/*" onChange={handleImageUpload} />
             {preview && (
-              <img src={preview} alt="Preview" className="img-fluid mt-3 rounded" style={{ maxWidth: "300px" }} />
+              <div className="mt-3">
+                <img src={preview} alt="Preview" className="img-fluid rounded" style={{ maxWidth: "300px" }} />
+                {imageSize && (
+                  <small className="text-muted d-block mt-2">
+                    📏 Compressed: {imageSize.original}MB → {imageSize.compressed}MB
+                  </small>
+                )}
+              </div>
             )}
           </div>
 
