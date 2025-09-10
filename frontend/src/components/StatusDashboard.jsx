@@ -33,6 +33,24 @@ export default function StatusDashboard() {
     country: null
   });
   
+  const [cameraPermission, setCameraPermission] = useState({
+    granted: false,
+    denied: false,
+    unavailable: false
+  });
+  
+  const [microphonePermission, setMicrophonePermission] = useState({
+    granted: false,
+    denied: false,
+    unavailable: false
+  });
+  
+  const [videoPermission, setVideoPermission] = useState({
+    granted: false,
+    denied: false,
+    unavailable: false
+  });
+  
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [lastUpdate, setLastUpdate] = useState(new Date());
   const intervalRef = useRef(null);
@@ -134,6 +152,77 @@ export default function StatusDashboard() {
     });
   };
 
+  // Check camera permission
+  const checkCameraPermission = () => {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      setCameraPermission(prev => ({
+        ...prev,
+        unavailable: true
+      }));
+      return;
+    }
+
+    navigator.permissions.query({ name: 'camera' }).then((result) => {
+      setCameraPermission(prev => ({
+        ...prev,
+        granted: result.state === 'granted',
+        denied: result.state === 'denied'
+      }));
+    }).catch(() => {
+      setCameraPermission(prev => ({
+        ...prev,
+        granted: false,
+        denied: false
+      }));
+    });
+  };
+
+  // Check microphone permission
+  const checkMicrophonePermission = () => {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      setMicrophonePermission(prev => ({
+        ...prev,
+        unavailable: true
+      }));
+      return;
+    }
+
+    navigator.permissions.query({ name: 'microphone' }).then((result) => {
+      setMicrophonePermission(prev => ({
+        ...prev,
+        granted: result.state === 'granted',
+        denied: result.state === 'denied'
+      }));
+    }).catch(() => {
+      setMicrophonePermission(prev => ({
+        ...prev,
+        granted: false,
+        denied: false
+      }));
+    });
+  };
+
+  // Check video permission (combination of camera and microphone)
+  const checkVideoPermission = () => {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      setVideoPermission(prev => ({
+        ...prev,
+        unavailable: true
+      }));
+      return;
+    }
+
+    // Video requires both camera and microphone
+    const cameraGranted = cameraPermission.granted;
+    const micGranted = microphonePermission.granted;
+    
+    setVideoPermission(prev => ({
+      ...prev,
+      granted: cameraGranted && micGranted,
+      denied: cameraPermission.denied || microphonePermission.denied
+    }));
+  };
+
   // Request location permission
   const requestLocationPermission = () => {
     if (!navigator.geolocation) {
@@ -208,13 +297,157 @@ export default function StatusDashboard() {
     );
   };
 
+  // Request camera permission
+  const requestCameraPermission = async () => {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      warning('Camera access is not supported by this browser');
+      return;
+    }
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      // Stop the stream immediately as we just needed to check permission
+      stream.getTracks().forEach(track => track.stop());
+      
+      setCameraPermission(prev => ({
+        ...prev,
+        granted: true,
+        denied: false
+      }));
+      
+      // Save to localStorage
+      localStorage.setItem('cameraPermission', 'granted');
+      success('Camera access granted!');
+    } catch (error) {
+      console.error('Camera access denied:', error);
+      setCameraPermission(prev => ({
+        ...prev,
+        granted: false,
+        denied: true
+      }));
+      
+      localStorage.setItem('cameraPermission', 'denied');
+      notifyError('Camera access denied. Please enable camera permissions in your browser settings.');
+    }
+  };
+
+  // Request microphone permission
+  const requestMicrophonePermission = async () => {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      warning('Microphone access is not supported by this browser');
+      return;
+    }
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      // Stop the stream immediately as we just needed to check permission
+      stream.getTracks().forEach(track => track.stop());
+      
+      setMicrophonePermission(prev => ({
+        ...prev,
+        granted: true,
+        denied: false
+      }));
+      
+      // Save to localStorage
+      localStorage.setItem('microphonePermission', 'granted');
+      success('Microphone access granted!');
+    } catch (error) {
+      console.error('Microphone access denied:', error);
+      setMicrophonePermission(prev => ({
+        ...prev,
+        granted: false,
+        denied: true
+      }));
+      
+      localStorage.setItem('microphonePermission', 'denied');
+      notifyError('Microphone access denied. Please enable microphone permissions in your browser settings.');
+    }
+  };
+
+  // Request video permission (camera + microphone)
+  const requestVideoPermission = async () => {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      warning('Video recording is not supported by this browser');
+      return;
+    }
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+      // Stop the stream immediately as we just needed to check permission
+      stream.getTracks().forEach(track => track.stop());
+      
+      setVideoPermission(prev => ({
+        ...prev,
+        granted: true,
+        denied: false
+      }));
+      
+      setCameraPermission(prev => ({
+        ...prev,
+        granted: true,
+        denied: false
+      }));
+      
+      setMicrophonePermission(prev => ({
+        ...prev,
+        granted: true,
+        denied: false
+      }));
+      
+      // Save to localStorage
+      localStorage.setItem('videoPermission', 'granted');
+      localStorage.setItem('cameraPermission', 'granted');
+      localStorage.setItem('microphonePermission', 'granted');
+      success('Video recording access granted!');
+    } catch (error) {
+      console.error('Video access denied:', error);
+      setVideoPermission(prev => ({
+        ...prev,
+        granted: false,
+        denied: true
+      }));
+      
+      localStorage.setItem('videoPermission', 'denied');
+      notifyError('Video recording access denied. Please enable camera and microphone permissions in your browser settings.');
+    }
+  };
+
+  // Load permissions from localStorage
+  const loadPermissionsFromStorage = () => {
+    const cameraPerm = localStorage.getItem('cameraPermission');
+    const micPerm = localStorage.getItem('microphonePermission');
+    const videoPerm = localStorage.getItem('videoPermission');
+    
+    if (cameraPerm === 'granted') {
+      setCameraPermission(prev => ({ ...prev, granted: true }));
+    } else if (cameraPerm === 'denied') {
+      setCameraPermission(prev => ({ ...prev, denied: true }));
+    }
+    
+    if (micPerm === 'granted') {
+      setMicrophonePermission(prev => ({ ...prev, granted: true }));
+    } else if (micPerm === 'denied') {
+      setMicrophonePermission(prev => ({ ...prev, denied: true }));
+    }
+    
+    if (videoPerm === 'granted') {
+      setVideoPermission(prev => ({ ...prev, granted: true }));
+    } else if (videoPerm === 'denied') {
+      setVideoPermission(prev => ({ ...prev, denied: true }));
+    }
+  };
+
   // Refresh all statuses
   const refreshAll = async () => {
     setIsRefreshing(true);
     await Promise.all([
       checkBackendStatus(),
       checkWebSocketStatus(),
-      checkLocationPermission()
+      checkLocationPermission(),
+      checkCameraPermission(),
+      checkMicrophonePermission(),
+      checkVideoPermission()
     ]);
     setLastUpdate(new Date());
     setIsRefreshing(false);
@@ -222,6 +455,9 @@ export default function StatusDashboard() {
 
   // Auto-refresh every 30 seconds
   useEffect(() => {
+    // Load permissions from storage first
+    loadPermissionsFromStorage();
+    
     // Initial check
     refreshAll();
     
@@ -444,6 +680,126 @@ export default function StatusDashboard() {
               )}
             </div>
           )}
+        </div>
+      </div>
+
+      {/* Media Permissions */}
+      <div className="row g-3 mb-4">
+        {/* Camera Permission */}
+        <div className="col-md-4">
+          <div className="card bg-dark border-0 h-100">
+            <div className="card-body text-center">
+              <div className="d-flex align-items-center justify-content-between mb-3">
+                <h6 className="text-light mb-0">
+                  <i className="fas fa-camera me-2"></i>
+                  Camera
+                </h6>
+                <span className={`badge ${
+                  cameraPermission.granted ? 'bg-success' :
+                  cameraPermission.denied ? 'bg-danger' :
+                  cameraPermission.unavailable ? 'bg-secondary' :
+                  'bg-warning'
+                }`}>
+                  {cameraPermission.granted ? 'GRANTED' :
+                   cameraPermission.denied ? 'DENIED' :
+                   cameraPermission.unavailable ? 'UNAVAILABLE' :
+                   'UNKNOWN'}
+                </span>
+              </div>
+              
+              <p className="text-muted small mb-3">
+                Required for photo capture and video recording
+              </p>
+              
+              {!cameraPermission.granted && !cameraPermission.unavailable && (
+                <button
+                  className="btn btn-outline-primary btn-sm"
+                  onClick={requestCameraPermission}
+                >
+                  <i className="fas fa-camera me-1"></i>
+                  Grant Access
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Microphone Permission */}
+        <div className="col-md-4">
+          <div className="card bg-dark border-0 h-100">
+            <div className="card-body text-center">
+              <div className="d-flex align-items-center justify-content-between mb-3">
+                <h6 className="text-light mb-0">
+                  <i className="fas fa-microphone me-2"></i>
+                  Microphone
+                </h6>
+                <span className={`badge ${
+                  microphonePermission.granted ? 'bg-success' :
+                  microphonePermission.denied ? 'bg-danger' :
+                  microphonePermission.unavailable ? 'bg-secondary' :
+                  'bg-warning'
+                }`}>
+                  {microphonePermission.granted ? 'GRANTED' :
+                   microphonePermission.denied ? 'DENIED' :
+                   microphonePermission.unavailable ? 'UNAVAILABLE' :
+                   'UNKNOWN'}
+                </span>
+              </div>
+              
+              <p className="text-muted small mb-3">
+                Required for voice messages and video recording
+              </p>
+              
+              {!microphonePermission.granted && !microphonePermission.unavailable && (
+                <button
+                  className="btn btn-outline-primary btn-sm"
+                  onClick={requestMicrophonePermission}
+                >
+                  <i className="fas fa-microphone me-1"></i>
+                  Grant Access
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Video Permission */}
+        <div className="col-md-4">
+          <div className="card bg-dark border-0 h-100">
+            <div className="card-body text-center">
+              <div className="d-flex align-items-center justify-content-between mb-3">
+                <h6 className="text-light mb-0">
+                  <i className="fas fa-video me-2"></i>
+                  Video Recording
+                </h6>
+                <span className={`badge ${
+                  videoPermission.granted ? 'bg-success' :
+                  videoPermission.denied ? 'bg-danger' :
+                  videoPermission.unavailable ? 'bg-secondary' :
+                  'bg-warning'
+                }`}>
+                  {videoPermission.granted ? 'GRANTED' :
+                   videoPermission.denied ? 'DENIED' :
+                   videoPermission.unavailable ? 'UNAVAILABLE' :
+                   'UNKNOWN'}
+                </span>
+              </div>
+              
+              <p className="text-muted small mb-3">
+                Requires both camera and microphone access
+              </p>
+              
+              {!videoPermission.granted && !videoPermission.unavailable && (
+                <button
+                  className="btn btn-outline-primary btn-sm"
+                  onClick={requestVideoPermission}
+                >
+                  <i className="fas fa-video me-1"></i>
+                  Grant Access
+                </button>
+              )}
+            </div>
+          </div>
         </div>
       </div>
 

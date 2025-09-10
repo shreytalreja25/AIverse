@@ -19,8 +19,15 @@ export default function CreatePost() {
   const [imageSize, setImageSize] = useState(null);
   const [isDragOver, setIsDragOver] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [mediaStream, setMediaStream] = useState(null);
+  const [videoPreview, setVideoPreview] = useState(null);
+  const [recordingType, setRecordingType] = useState('photo'); // 'photo', 'video'
   const fileInputRef = useRef(null);
   const textareaRef = useRef(null);
+  const videoRef = useRef(null);
+  const mediaRecorderRef = useRef(null);
+  const recordedChunksRef = useRef([]);
 
   // Auto-resize textarea
   useEffect(() => {
@@ -121,6 +128,152 @@ export default function CreatePost() {
     }).join(', ');
   };
 
+  // Check camera permissions
+  const checkCameraPermissions = () => {
+    const cameraPerm = localStorage.getItem('cameraPermission');
+    const micPerm = localStorage.getItem('microphonePermission');
+    return {
+      camera: cameraPerm === 'granted',
+      microphone: micPerm === 'granted',
+      video: cameraPerm === 'granted' && micPerm === 'granted'
+    };
+  };
+
+  // Start camera for photo capture
+  const startCamera = async () => {
+    const permissions = checkCameraPermissions();
+    if (!permissions.camera) {
+      warning('Camera permission required. Please grant camera access in Settings.');
+      return;
+    }
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        video: { 
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+          facingMode: 'user'
+        } 
+      });
+      setMediaStream(stream);
+      setRecordingType('photo');
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+      }
+    } catch (error) {
+      console.error('Error accessing camera:', error);
+      notifyError('Failed to access camera. Please check permissions.');
+    }
+  };
+
+  // Start camera for video recording
+  const startVideoRecording = async () => {
+    const permissions = checkCameraPermissions();
+    if (!permissions.video) {
+      warning('Camera and microphone permissions required. Please grant access in Settings.');
+      return;
+    }
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        video: { 
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+          facingMode: 'user'
+        },
+        audio: true
+      });
+      setMediaStream(stream);
+      setRecordingType('video');
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+      }
+    } catch (error) {
+      console.error('Error accessing camera for video:', error);
+      notifyError('Failed to access camera for video recording. Please check permissions.');
+    }
+  };
+
+  // Stop camera
+  const stopCamera = () => {
+    if (mediaStream) {
+      mediaStream.getTracks().forEach(track => track.stop());
+      setMediaStream(null);
+    }
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
+    setIsRecording(false);
+  };
+
+  // Capture photo
+  const capturePhoto = () => {
+    if (!videoRef.current || !mediaStream) return;
+
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('2d');
+    canvas.width = videoRef.current.videoWidth;
+    canvas.height = videoRef.current.videoHeight;
+    context.drawImage(videoRef.current, 0, 0);
+    
+    const dataURL = canvas.toDataURL('image/jpeg', 0.8);
+    setImageData(dataURL);
+    setPreview(dataURL);
+    setImage(canvas.toBlob(blob => blob));
+    
+    stopCamera();
+    success('Photo captured!');
+  };
+
+  // Start video recording
+  const startRecording = () => {
+    if (!mediaStream) return;
+
+    recordedChunksRef.current = [];
+    const mediaRecorder = new MediaRecorder(mediaStream, {
+      mimeType: 'video/webm;codecs=vp9'
+    });
+    
+    mediaRecorderRef.current = mediaRecorder;
+    
+    mediaRecorder.ondataavailable = (event) => {
+      if (event.data.size > 0) {
+        recordedChunksRef.current.push(event.data);
+      }
+    };
+    
+    mediaRecorder.onstop = () => {
+      const blob = new Blob(recordedChunksRef.current, { type: 'video/webm' });
+      const url = URL.createObjectURL(blob);
+      setVideoPreview(url);
+      setImageData(url);
+      setPreview(url);
+      setImage(blob);
+      stopCamera();
+      success('Video recorded!');
+    };
+    
+    mediaRecorder.start();
+    setIsRecording(true);
+  };
+
+  // Stop video recording
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+    }
+  };
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (mediaStream) {
+        mediaStream.getTracks().forEach(track => track.stop());
+      }
+    };
+  }, [mediaStream]);
+
   // Handle post submission
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -203,7 +356,7 @@ export default function CreatePost() {
               <span className="visually-hidden">Loading...</span>
             </div>
           ) : (
-            <span className="fw-bold">Share</span>
+            <span className="fw-bold">Create</span>
           )}
         </button>
       </div>
@@ -296,8 +449,67 @@ export default function CreatePost() {
                   </div>
                 )}
 
+                {/* Camera/Video Preview */}
+                {mediaStream && (
+                  <div className="position-relative mb-3">
+                    <video
+                      ref={videoRef}
+                      autoPlay
+                      muted
+                      playsInline
+                      className="img-fluid rounded-3 w-100"
+                      style={{ maxHeight: '400px', objectFit: 'cover' }}
+                    />
+                    <div className="position-absolute top-0 end-0 m-2">
+                      <button
+                        type="button"
+                        className="btn btn-danger btn-sm rounded-circle"
+                        onClick={stopCamera}
+                        style={{ width: '32px', height: '32px' }}
+                      >
+                        <i className="fas fa-times"></i>
+                      </button>
+                    </div>
+                    {recordingType === 'photo' && (
+                      <div className="position-absolute bottom-0 start-50 translate-middle-x mb-3">
+                        <button
+                          type="button"
+                          className="btn btn-primary btn-lg rounded-circle"
+                          onClick={capturePhoto}
+                          style={{ width: '60px', height: '60px' }}
+                        >
+                          <i className="fas fa-camera"></i>
+                        </button>
+                      </div>
+                    )}
+                    {recordingType === 'video' && (
+                      <div className="position-absolute bottom-0 start-50 translate-middle-x mb-3">
+                        {!isRecording ? (
+                          <button
+                            type="button"
+                            className="btn btn-danger btn-lg rounded-circle"
+                            onClick={startRecording}
+                            style={{ width: '60px', height: '60px' }}
+                          >
+                            <i className="fas fa-video"></i>
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            className="btn btn-danger btn-lg rounded-circle"
+                            onClick={stopRecording}
+                            style={{ width: '60px', height: '60px' }}
+                          >
+                            <i className="fas fa-stop"></i>
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {/* Drag & Drop Area */}
-                {!preview && (
+                {!preview && !mediaStream && (
                   <div
                     className={`border-2 border-dashed rounded-3 p-4 text-center ${
                       isDragOver ? 'border-primary bg-primary bg-opacity-10' : 'border-secondary'
@@ -324,7 +536,7 @@ export default function CreatePost() {
                     <input
                       ref={fileInputRef}
                       type="file"
-                      accept="image/*"
+                      accept="image/*,video/*"
                       onChange={handleImageUpload}
                       className="d-none"
                     />
@@ -332,14 +544,30 @@ export default function CreatePost() {
                 )}
 
                 {/* Quick Actions */}
-                <div className="d-flex gap-2 mt-3">
+                <div className="d-flex gap-2 mt-3 flex-wrap">
                   <button
                     type="button"
                     className="btn btn-outline-light btn-sm"
                     onClick={() => fileInputRef.current?.click()}
                   >
                     <i className="fas fa-image me-1"></i>
-                    Photo
+                    Upload
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-outline-light btn-sm"
+                    onClick={startCamera}
+                  >
+                    <i className="fas fa-camera me-1"></i>
+                    Camera
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-outline-light btn-sm"
+                    onClick={startVideoRecording}
+                  >
+                    <i className="fas fa-video me-1"></i>
+                    Video
                   </button>
                   <button
                     type="button"
@@ -443,7 +671,7 @@ export default function CreatePost() {
                   ) : (
                     <>
                       <i className="fas fa-paper-plane me-2"></i>
-                      Share Post
+                      Create Post
                     </>
                   )}
                 </button>
