@@ -94,6 +94,32 @@ export default function Activities() {
     } catch { return null; }
   });
 
+  // Local cache helpers
+  const CACHE_KEY = 'activities:cache';
+  const CACHE_TTL_MS = 6 * 60 * 60 * 1000; // 6 hours
+  const cacheKeyFor = (c, co) => `${(c||'').trim().toLowerCase()}|${(co||'').trim().toLowerCase()}`;
+
+  const readCache = useCallback((c, co) => {
+    try {
+      const raw = localStorage.getItem(CACHE_KEY);
+      if (!raw) return null;
+      const obj = JSON.parse(raw);
+      const entry = obj[cacheKeyFor(c, co)];
+      if (!entry) return null;
+      if (Date.now() - entry.ts > CACHE_TTL_MS) return null;
+      return entry.items || null;
+    } catch { return null; }
+  }, []);
+
+  const writeCache = useCallback((c, co, value) => {
+    try {
+      const raw = localStorage.getItem(CACHE_KEY);
+      const obj = raw ? JSON.parse(raw) : {};
+      obj[cacheKeyFor(c, co)] = { ts: Date.now(), items: value };
+      localStorage.setItem(CACHE_KEY, JSON.stringify(obj));
+    } catch {}
+  }, []);
+
   // Load user's stored location
   useEffect(() => {
     try {
@@ -117,6 +143,12 @@ export default function Activities() {
 
   const fetchActivities = async ({ hint } = {}) => {
     if (!city && !country) return;
+    // Try cache first
+    const cached = readCache(city, country);
+    if (cached && Array.isArray(cached) && cached.length) {
+      setItems(cached);
+      return;
+    }
     setLoading(true);
     try {
       // Basic weather placeholders for now; can expand to call weather API later
@@ -124,6 +156,15 @@ export default function Activities() {
       const tempC = 24;
       const list = await generateActivities({ city, country, weatherText, tempC, timeOfDay, hint });
       setItems(list);
+      writeCache(city, country, list);
+      // Persist to backend DB so other devices can reuse
+      try {
+        fetch(`${API_BASE_URL}/api/activities-cache`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ city, country, items: list, ttlHours: 6 })
+        }).catch(() => {});
+      } catch {}
     } catch (e) {
       console.error(e);
       setItems([]);
@@ -162,7 +203,27 @@ export default function Activities() {
   };
 
   useEffect(() => {
-    if ((city || country) && items.length === 0) fetchActivities();
+    if (!city && !country) return;
+    const local = readCache(city, country);
+    if (local && Array.isArray(local) && local.length) {
+      setItems(local);
+      return;
+    }
+    // Try backend cache
+    (async () => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/activities-cache?city=${encodeURIComponent(city)}&country=${encodeURIComponent(country)}`);
+        if (res.ok) {
+          const j = await res.json();
+          if (Array.isArray(j?.items) && j.items.length) {
+            setItems(j.items);
+            writeCache(city, country, j.items);
+            return;
+          }
+        }
+      } catch {}
+      if (items.length === 0) fetchActivities();
+    })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [city, country]);
 
@@ -348,16 +409,16 @@ export default function Activities() {
           onSelectItem={(it) => { setSelectedItem(it); setView('map'); }}
         />
       )}
-      {view === "map" && (
-        <ActivitiesMap
-          items={items}
-          city={city}
-          country={country}
-          selectedItem={selectedItem}
-          lastMapView={lastMapView}
-          onMapViewChange={handleMapViewChange}
-        />
-      )}
+      {/* Keep the map mounted for app-like feel, just toggle visibility */}
+      <ActivitiesMap
+        items={items}
+        city={city}
+        country={country}
+        selectedItem={selectedItem}
+        lastMapView={lastMapView}
+        onMapViewChange={handleMapViewChange}
+        visible={view === 'map'}
+      />
       </Container>
     );
   }
