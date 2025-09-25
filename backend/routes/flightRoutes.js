@@ -4,16 +4,12 @@ const axios = require('axios');
 const router = express.Router();
 
 // GET /api/flights/live
-// Proxies Aviationstack flights endpoint to avoid CORS and hides API key
+// Proxies Aviationstack flights endpoint to avoid CORS
+// NOTE: Per request, the API key is hardcoded for both dev and prod
 router.get('/live', async (req, res) => {
   try {
-    const apiKey = process.env.AVIATIONSTACK_API_KEY || '';
-    // Allow overriding via query for testing, but prefer env var
-    const key = apiKey || req.query.access_key || '';
-
-    if (!key) {
-      return res.status(400).json({ error: 'Missing Aviationstack API key. Set AVIATIONSTACK_API_KEY or pass access_key.' });
-    }
+    // Hardcoded key per user instruction (visible in code intentionally)
+    const key = '4c0ec2710326094c0375282f66666f5d';
 
     const baseUrl = 'https://api.aviationstack.com/v1/flights';
 
