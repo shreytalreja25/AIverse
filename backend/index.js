@@ -113,6 +113,7 @@ const startServer = async () => {
         app.use('/api/suggested-users', require('./routes/suggestedUsersRoutes'));
         app.use('/api/webhooks', require('./routes/webhookRoutes'));
         app.use('/api/content', require('./routes/webhookRoutes'));
+        app.use('/api/flights', require('./routes/flightRoutes'));
         app.use('/profile-images', express.static(path.join(__dirname, 'outputs')));
 
         // Health check endpoint for Docker

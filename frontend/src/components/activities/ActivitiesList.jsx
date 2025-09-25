@@ -20,7 +20,7 @@ const Card = styled(motion.div)`
   min-height: 240px;
 `;
 
-export default function ActivitiesList({ items = [], city, country, onRefresh }) {
+export default function ActivitiesList({ items = [], city, country, onRefresh, onSelectItem }) {
   const [feedback, setFeedback] = useState(null);
   const { success } = useNotify();
 
@@ -65,6 +65,11 @@ export default function ActivitiesList({ items = [], city, country, onRefresh })
                 <button className="btn btn-outline-secondary" onClick={() => onRefresh && onRefresh({ hint: `more like: ${it.title}` })}>
                   <i className="fas fa-magic"></i> More like this
                 </button>
+                {onSelectItem && (
+                  <button className="btn btn-outline-primary" onClick={() => onSelectItem(it)}>
+                    <i className="fas fa-location-dot"></i> View on Map
+                  </button>
+                )}
                 <button className="btn btn-success" onClick={() => share(it)}>
                   <i className="fas fa-share"></i> Share
                 </button>

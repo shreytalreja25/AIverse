@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import styled, { keyframes } from "styled-components";
 import API_BASE_URL from "../utils/config";
 import { generateActivities } from "../services/activities/geminiClient";
@@ -86,6 +86,13 @@ export default function Activities() {
   const [view, setView] = useState("reels");
   const [loading, setLoading] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [selectedItem, setSelectedItem] = useState(null);
+  const [lastMapView, setLastMapView] = useState(() => {
+    try {
+      const saved = localStorage.getItem('activities:lastMapView');
+      return saved ? JSON.parse(saved) : null;
+    } catch { return null; }
+  });
 
   // Load user's stored location
   useEffect(() => {
@@ -172,9 +179,23 @@ export default function Activities() {
         const json = await res.json();
         setCity(json.city || json.locality || "");
         setCountry(json.countryName || "");
+        // cache user location
+        try { localStorage.setItem('activities:userLocation', JSON.stringify({ latitude, longitude, city: json.city || json.locality || "", country: json.countryName || "" })); } catch {}
       } catch {}
     });
   };
+
+  // Persist last selected item and map view
+  useEffect(() => {
+    if (selectedItem) {
+      try { localStorage.setItem('activities:selected', JSON.stringify(selectedItem)); } catch {}
+    }
+  }, [selectedItem]);
+
+  const handleMapViewChange = useCallback((view) => {
+    setLastMapView(view);
+    try { localStorage.setItem('activities:lastMapView', JSON.stringify(view)); } catch {}
+  }, []);
 
   // Create mixed content for reels (activities + posts)
   const mixedContent = useMemo(() => {
@@ -233,7 +254,7 @@ export default function Activities() {
         </div>
       </div>
 
-      <ul className="nav nav-tabs mb-3">
+      <ul className="nav nav-tabs mb-3 sticky-top bg-dark-subtle p-1 rounded" style={{ top: 64, zIndex: 2 }}>
         <li className="nav-item">
           <button className={`nav-link ${view === "reels" ? "active" : ""}`} onClick={() => setView("reels")}>Reels</button>
         </li>
@@ -318,8 +339,25 @@ export default function Activities() {
         </div>
       )}
 
-      {view === "list" && <ActivitiesList items={items} city={city} country={country} onRefresh={fetchActivities} />}
-      {view === "map" && <ActivitiesMap items={items} city={city} country={country} />}
+      {view === "list" && (
+        <ActivitiesList
+          items={items}
+          city={city}
+          country={country}
+          onRefresh={fetchActivities}
+          onSelectItem={(it) => { setSelectedItem(it); setView('map'); }}
+        />
+      )}
+      {view === "map" && (
+        <ActivitiesMap
+          items={items}
+          city={city}
+          country={country}
+          selectedItem={selectedItem}
+          lastMapView={lastMapView}
+          onMapViewChange={handleMapViewChange}
+        />
+      )}
       </Container>
     );
   }
